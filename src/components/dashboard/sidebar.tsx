@@ -12,6 +12,7 @@ import {
   LogOut,
   LayoutDashboard,
   Shield,
+  Code,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/dashboard/services", label: "Services", icon: Scissors },
   { href: "/dashboard/staff", label: "Staff", icon: Users },
   { href: "/dashboard/clients", label: "Clients", icon: UserCircle },
+  { href: "/dashboard/widgets", label: "Widgets", icon: Code },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

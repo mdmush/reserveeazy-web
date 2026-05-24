@@ -9,7 +9,8 @@
     "lint": "eslint",
     "smoke-test": "node scripts/smoke-test.mjs",
     "setup:auth": "node scripts/setup-auth.mjs",
-    "db:push": "npx supabase db push"
+    "db:push": "npx supabase db push",
+    "test:embed": "npx --yes serve . -p 5500"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

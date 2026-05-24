@@ -30,7 +30,7 @@ const PUBLIC_ANON_TABLES = [
   "staff_time_off",
 ];
 
-const AUTH_ONLY_TABLES = ["clients", "appointments"];
+const AUTH_ONLY_TABLES = ["clients", "appointments", "booking_widgets"];
 
 async function main() {
   const env = loadEnv();
@@ -92,6 +92,15 @@ async function main() {
   }
   console.log("PASS: create_public_booking RPC exists");
 
+  const { error: embedRpcError } = await supabase.rpc("get_embed_widget_context", {
+    p_token: "__smoke_test_nonexistent__",
+  });
+  if (embedRpcError?.message?.includes("Could not find the function")) {
+    console.error("FAIL: get_embed_widget_context RPC not found");
+    process.exit(1);
+  }
+  console.log("PASS: get_embed_widget_context RPC exists");
+
   // 4. App routes (requires dev server)
   const appUrl = process.env.SMOKE_TEST_APP_URL ?? "http://localhost:3000";
   try {
@@ -116,7 +125,8 @@ async function main() {
   console.log("  4. /dashboard/staff → add staff + availability");
   console.log("  5. /dashboard/calendar → create appointment");
   console.log("  6. /book/<slug> → public booking");
-  console.log("  7. /dashboard/clients → verify client created");
+  console.log("  7. /dashboard/widgets → create embed widget + copy script");
+  console.log("  8. /dashboard/clients → verify client created");
 }
 
 main().catch((err) => {

@@ -48,3 +48,21 @@ export const DEFAULT_BUSINESS_SETTINGS = {
   max_advance_days: 60,
   auto_confirm: true,
 };
+
+export const WIDGET_POSITIONS = [
+  { value: "bottom_right", label: "Bottom right" },
+  { value: "bottom_left", label: "Bottom left" },
+  { value: "bottom_center", label: "Bottom center" },
+  { value: "top_right", label: "Top right" },
+  { value: "top_left", label: "Top left" },
+] as const;
+
+export type WidgetPosition = (typeof WIDGET_POSITIONS)[number]["value"];
+
+export function widgetPositionToScript(position: WidgetPosition): string {
+  return position.replace(/_/g, "-");
+}
+
+export function widgetPositionLabel(position: WidgetPosition): string {
+  return WIDGET_POSITIONS.find((p) => p.value === position)?.label ?? position;
+}

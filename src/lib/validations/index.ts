@@ -91,6 +91,19 @@ export const bookingClientSchema = z.object({
   phone: z.string().optional(),
 });
 
+export const widgetSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  position: z.enum([
+    "bottom_right",
+    "bottom_left",
+    "bottom_center",
+    "top_right",
+    "top_left",
+  ]),
+  buttonLabel: z.string().min(1, "Button label is required"),
+  allowedDomains: z.string().optional(),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
@@ -100,3 +113,4 @@ export type ClientInput = z.infer<typeof clientSchema>;
 export type AppointmentInput = z.infer<typeof appointmentSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
 export type BookingClientInput = z.infer<typeof bookingClientSchema>;
+export type WidgetInput = z.infer<typeof widgetSchema>;

@@ -14,6 +14,12 @@ export type BusinessType =
   | "clinic"
   | "pet_grooming"
   | "other";
+export type WidgetPosition =
+  | "bottom_right"
+  | "bottom_left"
+  | "bottom_center"
+  | "top_right"
+  | "top_left";
 
 export interface BusinessSettings {
   slot_interval_minutes: number;
@@ -259,6 +265,41 @@ export interface Database {
         };
         Relationships: [];
       };
+      booking_widgets: {
+        Row: {
+          id: string;
+          business_id: string;
+          name: string;
+          public_token: string;
+          position: WidgetPosition;
+          button_label: string;
+          allowed_domains: string[];
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          name: string;
+          public_token: string;
+          position?: WidgetPosition;
+          button_label?: string;
+          allowed_domains?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          public_token?: string;
+          position?: WidgetPosition;
+          button_label?: string;
+          allowed_domains?: string[];
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Enums: {
@@ -266,6 +307,7 @@ export interface Database {
       appointment_status: AppointmentStatus;
       appointment_source: AppointmentSource;
       business_type: BusinessType;
+      widget_position: WidgetPosition;
     };
     CompositeTypes: Record<string, never>;
     Functions: {
@@ -281,9 +323,23 @@ export interface Database {
         };
         Returns: string;
       };
+      get_embed_widget_context: {
+        Args: {
+          p_token: string;
+        };
+        Returns: Json;
+      };
     };
   };
 }
+
+type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export type Business = Database["public"]["Tables"]["businesses"]["Row"];
 export type BusinessMember =
@@ -293,3 +349,5 @@ export type Client = Database["public"]["Tables"]["clients"]["Row"];
 export type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 export type StaffAvailability =
   Database["public"]["Tables"]["staff_availability"]["Row"];
+export type BookingWidget =
+  Database["public"]["Tables"]["booking_widgets"]["Row"];
