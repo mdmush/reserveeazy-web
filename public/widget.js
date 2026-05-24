@@ -22,8 +22,15 @@
   var position = script.getAttribute("data-position") || "bottom-right";
   var label = script.getAttribute("data-label") || "Book now";
   var color = script.getAttribute("data-color") || "#cb2030";
+  var themeBackground = "#fffbfb";
+  var themeBorder = "#f0e0de";
+  var themeForeground = "#1a1212";
+  var themeMutedForeground = "#6b5c5c";
+  var themeBackgroundGradient =
+    "linear-gradient(135deg,#fde8ea 0%,#fff4f0 50%,#fffbfb 100%)";
   var scriptSrc = script.getAttribute("src") || "";
   var baseUrl = scriptSrc.replace(/\/widget\.js(\?.*)?$/, "");
+  var helpUrl = script.getAttribute("data-help-url") || baseUrl;
 
   var ROOT_ID = "reserveeazy-widget-root";
   var STYLE_ID = "reserveeazy-widget-styles";
@@ -34,9 +41,25 @@
     styleEl.id = STYLE_ID;
     styleEl.textContent =
       "@keyframes reserveeazy-spin{to{transform:rotate(360deg)}}" +
-      ".reserveeazy-widget-spinner{width:32px;height:32px;border:3px solid #f0e8e8;border-top-color:" +
+      ".reserveeazy-widget-spinner{width:32px;height:32px;border:3px solid " +
+      themeBorder +
+      ";border-top-color:" +
       color +
-      ";border-radius:50%;animation:reserveeazy-spin .75s linear infinite}";
+      ";border-radius:50%;animation:reserveeazy-spin .75s linear infinite}" +
+      ".reserveeazy-widget-help{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;min-height:28px;padding:2px 10px;border:1px solid " +
+      themeBorder +
+      ";border-radius:8px;background:rgba(255,255,255,0.65);color:" +
+      themeMutedForeground +
+      ";font-size:13px;font-weight:500;line-height:1;text-decoration:none;cursor:pointer;font-family:system-ui,-apple-system,sans-serif;transition:background .15s ease,color .15s ease,border-color .15s ease}" +
+      ".reserveeazy-widget-help:hover{background:#fff;color:" +
+      themeForeground +
+      ";border-color:" +
+      color +
+      "}" +
+      ".reserveeazy-widget-help:focus-visible{outline:2px solid " +
+      color +
+      ";outline-offset:2px}" +
+      ".reserveeazy-widget-help svg{flex-shrink:0}";
     document.head.appendChild(styleEl);
   }
 
@@ -102,13 +125,56 @@
     title.style.cssText =
       "font-size:" +
       fontSize +
-      ";font-weight:700;color:#1a1212;letter-spacing:-0.02em;line-height:1.2;";
-    title.innerHTML =
-      'Reserve<span style="color:' + color + '">Eazy</span>';
+      ";font-weight:700;color:" +
+      themeForeground +
+      ";letter-spacing:-0.02em;line-height:1.2;";
+    title.innerHTML = 'Reserve<span style="color:' + color + '">Eazy</span>';
 
     row.appendChild(dot);
     row.appendChild(title);
     return row;
+  }
+
+  function createHelpButton() {
+    var help = document.createElement("a");
+    help.className = "reserveeazy-widget-help";
+    help.href = helpUrl;
+    help.target = "_blank";
+    help.rel = "noopener noreferrer";
+    help.setAttribute("aria-label", "Get help with ReserveEazy booking");
+
+    var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.setAttribute("width", "16");
+    icon.setAttribute("height", "16");
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("fill", "none");
+    icon.setAttribute("stroke", "currentColor");
+    icon.setAttribute("stroke-width", "2");
+    icon.setAttribute("stroke-linecap", "round");
+    icon.setAttribute("stroke-linejoin", "round");
+    icon.setAttribute("aria-hidden", "true");
+
+    var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", "12");
+    circle.setAttribute("cy", "12");
+    circle.setAttribute("r", "10");
+
+    var path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path1.setAttribute("d", "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3");
+
+    var path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path2.setAttribute("d", "M12 17h.01");
+
+    icon.appendChild(circle);
+    icon.appendChild(path1);
+    icon.appendChild(path2);
+
+    var helpLabel = document.createElement("span");
+    helpLabel.textContent = "Help";
+
+    help.appendChild(icon);
+    help.appendChild(helpLabel);
+    return help;
   }
 
   var root = document.createElement("div");
@@ -142,7 +208,7 @@
     "width:min(100vw - 32px, 420px)",
     "height:min(72vh, 640px)",
     "margin-bottom:12px",
-    "background:#fff",
+    "background:" + themeBackground,
     "border-radius:16px",
     "overflow:hidden",
     "box-shadow:0 12px 40px rgba(0,0,0,0.22)",
@@ -160,12 +226,20 @@
     "flex-shrink:0",
     "display:flex",
     "align-items:center",
-    "justify-content:center",
-    "padding:14px 16px",
-    "border-bottom:1px solid #f0e8e8",
-    "background:#fff",
+    "justify-content:space-between",
+    "gap:12px",
+    "padding:12px 14px",
+    "border-bottom:1px solid " + themeBorder,
+    "background:" + themeBackgroundGradient,
   ].join(";");
-  header.appendChild(createBrandRow("17px"));
+
+  var headerBrand = createBrandRow("17px");
+  headerBrand.removeAttribute("aria-hidden");
+  headerBrand.style.flex = "1 1 auto";
+  headerBrand.style.minWidth = "0";
+
+  header.appendChild(headerBrand);
+  header.appendChild(createHelpButton());
 
   var body = document.createElement("div");
   body.style.cssText =
@@ -184,7 +258,7 @@
     "align-items:center",
     "justify-content:center",
     "gap:20px",
-    "background:#fff",
+    "background:" + themeBackgroundGradient,
   ].join(";");
 
   var loaderBrand = createBrandRow("20px");
@@ -197,7 +271,9 @@
   var loadingText = document.createElement("p");
   loadingText.textContent = "Loading booking…";
   loadingText.style.cssText =
-    "margin:0;font-size:13px;color:#6b5c5c;font-family:system-ui,-apple-system,sans-serif;";
+    "margin:0;font-size:13px;color:" +
+    themeMutedForeground +
+    ";font-family:system-ui,-apple-system,sans-serif;";
 
   loader.appendChild(loaderBrand);
   loader.appendChild(spinner);
@@ -206,7 +282,9 @@
   var iframe = document.createElement("iframe");
   iframe.title = "Book an appointment";
   iframe.style.cssText =
-    "flex:1 1 auto;width:100%;min-height:0;border:none;display:block;background:#fff;opacity:0;transition:opacity .2s ease;";
+    "flex:1 1 auto;width:100%;min-height:0;border:none;display:block;background:" +
+    themeBackground +
+    ";opacity:0;transition:opacity .2s ease;";
   iframe.setAttribute("allow", "clipboard-write");
 
   var launcher = document.createElement("button");
@@ -243,12 +321,14 @@
   var embedUrl = baseUrl + "/embed/" + encodeURIComponent(token);
 
   function showLoader() {
+    header.style.display = "none";
     loader.style.display = "flex";
     panel.setAttribute("aria-busy", "true");
     iframe.style.opacity = "0";
   }
 
   function hideLoader() {
+    header.style.display = "flex";
     loader.style.display = "none";
     panel.setAttribute("aria-busy", "false");
     iframe.style.opacity = "1";

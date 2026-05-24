@@ -43,7 +43,7 @@ export default async function EmbedBookingPage({
   const data = await loadPublicBookingByBusinessId(context.business_id);
   if (!data) notFound();
 
-  const { business, services, staff, slotsByStaff, appointments } = data;
+  const { business, services, staff, slotOptionsByStaffService, appointments } = data;
 
   return (
     <div className="min-h-0 bg-background py-4 px-3 relative overflow-x-hidden overflow-y-auto">
@@ -53,7 +53,7 @@ export default async function EmbedBookingPage({
           business={business}
           services={services}
           staff={staff}
-          slotsByStaff={slotsByStaff}
+          slotOptionsByStaffService={slotOptionsByStaffService}
           appointments={appointments}
         />
       </main>

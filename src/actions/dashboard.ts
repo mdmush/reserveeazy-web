@@ -10,6 +10,7 @@ import {
   appointmentSchema,
   settingsSchema,
   availabilitySchema,
+  businessHoursSchema,
   type ServiceInput,
   type StaffInput,
   type ClientInput,
@@ -199,6 +200,46 @@ export async function addAvailabilityAction(
 
   if (error) return { error: error.message };
   revalidatePath("/dashboard/staff");
+  return { success: true };
+}
+
+export async function addBusinessHoursAction(data: {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+}) {
+  const parsed = businessHoursSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+
+  const membership = await requireMembership();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("business_hours").insert({
+    business_id: membership.business_id,
+    day_of_week: parsed.data.dayOfWeek,
+    start_time: parsed.data.startTime,
+    end_time: parsed.data.endTime,
+  });
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/book/[slug]");
+  return { success: true };
+}
+
+export async function deleteBusinessHoursAction(id: string) {
+  const membership = await requireMembership();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("business_hours")
+    .delete()
+    .eq("id", id)
+    .eq("business_id", membership.business_id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/book/[slug]");
   return { success: true };
 }
 

@@ -5,7 +5,7 @@ import { format, addDays } from "date-fns";
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { createPublicBookingAction } from "@/actions/dashboard";
 import { formatPrice, formatDuration } from "@/lib/format";
-import { formatSlot, formatSlotDate } from "@/lib/booking/slots";
+import { formatSlot, formatSlotDate, slotBelongsToDate, staffServiceSlotKey, type SlotOption } from "@/lib/booking/slots";
 import type {
   Business,
   Service,
@@ -28,7 +28,7 @@ interface BookingWidgetProps {
   business: Business;
   services: Service[];
   staff: StaffWithServices[];
-  slotsByStaff: Record<string, string[]>;
+  slotOptionsByStaffService: Record<string, SlotOption[]>;
   appointments: Pick<Appointment, "start_at" | "end_at" | "status" | "staff_member_id">[];
 }
 
@@ -50,7 +50,7 @@ export function BookingWidget({
   business,
   services,
   staff,
-  slotsByStaff,
+  slotOptionsByStaffService,
 }: BookingWidgetProps) {
   const [step, setStep] = useState<Step>("service");
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -80,8 +80,21 @@ export function BookingWidget({
       )
     : staff;
 
-  const slots = staffId ? slotsByStaff[staffId] ?? [] : [];
-  const dateSlots = slots.filter((slot) => slot.startsWith(selectedDate));
+  const today = format(new Date(), "yyyy-MM-dd");
+  const maxDate = format(
+    addDays(new Date(), business.settings.max_advance_days),
+    "yyyy-MM-dd"
+  );
+
+  const slotOptions =
+    staffId && serviceId
+      ? slotOptionsByStaffService[staffServiceSlotKey(staffId, serviceId)] ?? []
+      : [];
+  const dateSlots = slotOptions.filter((slot) =>
+    slotBelongsToDate(slot.startAt, selectedDate, business.timezone)
+  );
+  const canGoPrev = selectedDate > today;
+  const canGoNext = selectedDate < maxDate;
   const currentStepIndex = stepIndex(step);
 
   async function handleConfirm() {
@@ -312,6 +325,7 @@ export function BookingWidget({
                 variant="outline"
                 size="icon"
                 aria-label="Previous day"
+                disabled={!canGoPrev}
                 onClick={() =>
                   setSelectedDate(format(addDays(new Date(selectedDate), -1), "yyyy-MM-dd"))
                 }
@@ -325,6 +339,7 @@ export function BookingWidget({
                 variant="outline"
                 size="icon"
                 aria-label="Next day"
+                disabled={!canGoNext}
                 onClick={() =>
                   setSelectedDate(format(addDays(new Date(selectedDate), 1), "yyyy-MM-dd"))
                 }
@@ -334,26 +349,39 @@ export function BookingWidget({
             </div>
             {dateSlots.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No available slots on this day. Try another date.
+                No slots on this day. Try another date.
               </p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {dateSlots.map((slot) => (
-                  <Button
-                    key={slot}
-                    variant={selectedSlot === slot ? "default" : "outline"}
-                    className={cn(
-                      selectedSlot !== slot &&
-                        "hover:border-primary hover:bg-accent/50"
-                    )}
-                    onClick={() => {
-                      setSelectedSlot(slot);
-                      setStep("details");
-                    }}
-                  >
-                    {formatSlot(slot, business.timezone)}
-                  </Button>
-                ))}
+                {dateSlots.map((slot) => {
+                  const timeLabel = formatSlot(slot.startAt, business.timezone);
+                  return (
+                    <Button
+                      key={slot.startAt}
+                      variant={selectedSlot === slot.startAt ? "default" : "outline"}
+                      disabled={!slot.available}
+                      aria-label={
+                        slot.available
+                          ? `Book ${timeLabel}`
+                          : `${timeLabel}, unavailable`
+                      }
+                      className={cn(
+                        !slot.available &&
+                          "cursor-not-allowed border-border bg-muted/80 text-muted-foreground opacity-60 hover:bg-muted/80 hover:text-muted-foreground",
+                        slot.available &&
+                          selectedSlot !== slot.startAt &&
+                          "hover:border-primary hover:bg-accent/50"
+                      )}
+                      onClick={() => {
+                        if (!slot.available) return;
+                        setSelectedSlot(slot.startAt);
+                        setStep("details");
+                      }}
+                    >
+                      {timeLabel}
+                    </Button>
+                  );
+                })}
               </div>
             )}
           </CardContent>

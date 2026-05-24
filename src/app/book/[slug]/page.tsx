@@ -12,7 +12,7 @@ export default async function PublicBookingPage({
 
   if (!data) notFound();
 
-  const { business, services, staff, slotsByStaff, appointments } = data;
+  const { business, services, staff, slotOptionsByStaffService, appointments } = data;
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 relative overflow-hidden">
@@ -22,7 +22,7 @@ export default async function PublicBookingPage({
           business={business}
           services={services}
           staff={staff}
-          slotsByStaff={slotsByStaff}
+          slotOptionsByStaffService={slotOptionsByStaffService}
           appointments={appointments}
         />
         <p className="text-center text-xs text-muted-foreground mt-8">

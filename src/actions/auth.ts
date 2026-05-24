@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_BUSINESS_HOURS } from "@/lib/constants";
 import { getPostAuthRedirectPath } from "@/lib/superuser";
 import {
   loginSchema,
@@ -125,6 +126,17 @@ export async function onboardingAction(data: OnboardingInput) {
   });
 
   if (memberError) return { error: memberError.message };
+
+  const { error: hoursError } = await supabase.from("business_hours").insert(
+    DEFAULT_BUSINESS_HOURS.map((hours) => ({
+      business_id: business.id,
+      day_of_week: hours.day_of_week,
+      start_time: hours.start_time,
+      end_time: hours.end_time,
+    }))
+  );
+
+  if (hoursError) return { error: hoursError.message };
 
   redirect("/dashboard");
 }

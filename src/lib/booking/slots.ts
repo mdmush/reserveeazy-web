@@ -2,8 +2,8 @@ import { addMinutes, format, parseISO, startOfDay } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import type {
   Appointment,
+  AvailabilityWindow,
   BusinessSettings,
-  StaffAvailability,
 } from "@/types/database";
 
 export interface SlotInput {
@@ -11,9 +11,57 @@ export interface SlotInput {
   timezone: string;
   serviceDurationMinutes: number;
   settings: BusinessSettings;
-  availability: StaffAvailability[];
+  availability: AvailabilityWindow[];
   appointments: Pick<Appointment, "start_at" | "end_at" | "status">[];
   timeOff: { start_at: string; end_at: string }[];
+}
+
+function timeToMinutes(time: string): number {
+  const [h, m] = time.slice(0, 5).split(":").map(Number);
+  return h * 60 + m;
+}
+
+function minutesToTime(mins: number): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+}
+
+export function intersectAvailability(
+  businessHours: AvailabilityWindow[],
+  staffHours: AvailabilityWindow[]
+): AvailabilityWindow[] {
+  if (staffHours.length === 0) return businessHours;
+  if (businessHours.length === 0) return [];
+
+  const result: AvailabilityWindow[] = [];
+
+  for (let day = 0; day <= 6; day++) {
+    const bizWindows = businessHours.filter((h) => h.day_of_week === day);
+    const staffWindows = staffHours.filter((h) => h.day_of_week === day);
+
+    for (const biz of bizWindows) {
+      const bizStart = timeToMinutes(biz.start_time);
+      const bizEnd = timeToMinutes(biz.end_time);
+
+      for (const staff of staffWindows) {
+        const staffStart = timeToMinutes(staff.start_time);
+        const staffEnd = timeToMinutes(staff.end_time);
+        const start = Math.max(bizStart, staffStart);
+        const end = Math.min(bizEnd, staffEnd);
+
+        if (start < end) {
+          result.push({
+            day_of_week: day,
+            start_time: minutesToTime(start),
+            end_time: minutesToTime(end),
+          });
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 function overlaps(
@@ -25,7 +73,12 @@ function overlaps(
   return start < blockedEnd && end > blockedStart;
 }
 
-export function generateSlots(input: SlotInput): string[] {
+export type SlotOption = {
+  startAt: string;
+  available: boolean;
+};
+
+export function generateDaySlotOptions(input: SlotInput): SlotOption[] {
   const {
     date,
     timezone,
@@ -47,7 +100,7 @@ export function generateSlots(input: SlotInput): string[] {
   const minNotice = addMinutes(now, settings.min_notice_hours * 60);
   const maxAdvance = addMinutes(now, settings.max_advance_days * 24 * 60);
 
-  const slots: string[] = [];
+  const slots: SlotOption[] = [];
 
   for (const window of dayAvailability) {
     const windowStart = fromZonedTime(`${date}T${window.start_time}`, timezone);
@@ -80,15 +133,32 @@ export function generateSlots(input: SlotInput): string[] {
         )
       );
 
-      if (isPastMin && isWithinMax && !blockedByAppointment && !blockedByTimeOff) {
-        slots.push(cursor.toISOString());
-      }
+      slots.push({
+        startAt: cursor.toISOString(),
+        available:
+          isPastMin && isWithinMax && !blockedByAppointment && !blockedByTimeOff,
+      });
 
       cursor = addMinutes(cursor, interval);
     }
   }
 
   return slots;
+}
+
+export function generateSlots(input: SlotInput): string[] {
+  return generateDaySlotOptions(input)
+    .filter((slot) => slot.available)
+    .map((slot) => slot.startAt);
+}
+
+export function slotBelongsToDate(
+  iso: string,
+  date: string,
+  timezone: string
+): boolean {
+  const zoned = toZonedTime(parseISO(iso), timezone);
+  return format(zoned, "yyyy-MM-dd") === date;
 }
 
 export function formatSlot(iso: string, timezone: string): string {
@@ -111,4 +181,8 @@ export function getWeekDates(anchor: Date): Date[] {
     d.setDate(sunday.getDate() + i);
     return d;
   });
+}
+
+export function staffServiceSlotKey(staffId: string, serviceId: string): string {
+  return `${staffId}:${serviceId}`;
 }

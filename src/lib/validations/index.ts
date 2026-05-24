@@ -45,11 +45,18 @@ export const staffSchema = z.object({
   serviceIds: z.array(z.string()),
 });
 
-export const availabilitySchema = z.object({
-  dayOfWeek: z.number().min(0).max(6),
-  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
-  endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
-});
+export const availabilitySchema = z
+  .object({
+    dayOfWeek: z.number().min(0).max(6),
+    startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+    endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  })
+  .refine(
+    (data) => data.startTime.slice(0, 5) < data.endTime.slice(0, 5),
+    { message: "End time must be after start time", path: ["endTime"] }
+  );
+
+export const businessHoursSchema = availabilitySchema;
 
 export const clientSchema = z.object({
   fullName: z.string().min(1, "Name is required"),
@@ -114,3 +121,4 @@ export type AppointmentInput = z.infer<typeof appointmentSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
 export type BookingClientInput = z.infer<typeof bookingClientSchema>;
 export type WidgetInput = z.infer<typeof widgetSchema>;
+export type BusinessHoursInput = z.infer<typeof businessHoursSchema>;

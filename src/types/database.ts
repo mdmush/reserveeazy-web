@@ -156,6 +156,28 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      business_hours: {
+        Row: {
+          id: string;
+          business_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+        };
+        Update: {
+          day_of_week?: number;
+          start_time?: string;
+          end_time?: string;
+        };
+        Relationships: [];
+      };
       staff_availability: {
         Row: {
           id: string;
@@ -349,5 +371,11 @@ export type Client = Database["public"]["Tables"]["clients"]["Row"];
 export type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 export type StaffAvailability =
   Database["public"]["Tables"]["staff_availability"]["Row"];
+export type BusinessHours =
+  Database["public"]["Tables"]["business_hours"]["Row"];
+export type AvailabilityWindow = Pick<
+  StaffAvailability,
+  "day_of_week" | "start_time" | "end_time"
+>;
 export type BookingWidget =
   Database["public"]["Tables"]["booking_widgets"]["Row"];

@@ -1,7 +1,17 @@
 import { addDays, format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
-import { generateSlots } from "@/lib/booking/slots";
-import type { Business, BusinessMember, StaffAvailability } from "@/types/database";
+import {
+  generateDaySlotOptions,
+  intersectAvailability,
+  staffServiceSlotKey,
+  type SlotOption,
+} from "@/lib/booking/slots";
+import type {
+  Business,
+  BusinessHours,
+  BusinessMember,
+  StaffAvailability,
+} from "@/types/database";
 
 export type StaffWithRelations = BusinessMember & {
   staff_services: { service_id: string }[];
@@ -19,33 +29,44 @@ export async function loadPublicBookingByBusinessId(businessId: string) {
 
   if (!business) return null;
 
-  const [{ data: services }, { data: staff }, { data: appointments }] =
-    await Promise.all([
-      supabase
-        .from("services")
-        .select("*")
-        .eq("business_id", business.id)
-        .eq("is_active", true)
-        .order("sort_order"),
-      supabase
-        .from("business_members")
-        .select("*, staff_services(service_id), staff_availability(*)")
-        .eq("business_id", business.id)
-        .eq("is_bookable", true),
-      supabase
-        .from("appointments")
-        .select("start_at, end_at, status, staff_member_id")
-        .eq("business_id", business.id)
-        .gte("start_at", new Date().toISOString())
-        .neq("status", "cancelled"),
-    ]);
+  const [
+    { data: services },
+    { data: staff },
+    { data: appointments },
+    { data: businessHours },
+  ] = await Promise.all([
+    supabase
+      .from("services")
+      .select("*")
+      .eq("business_id", business.id)
+      .eq("is_active", true)
+      .order("sort_order"),
+    supabase
+      .from("business_members")
+      .select("*, staff_services(service_id), staff_availability(*)")
+      .eq("business_id", business.id)
+      .eq("is_bookable", true),
+    supabase
+      .from("appointments")
+      .select("start_at, end_at, status, staff_member_id")
+      .eq("business_id", business.id)
+      .gte("start_at", new Date().toISOString())
+      .neq("status", "cancelled"),
+    supabase
+      .from("business_hours")
+      .select("*")
+      .eq("business_id", business.id),
+  ]);
 
   const bookableStaff = (staff ?? []) as unknown as StaffWithRelations[];
   const activeServices = services ?? [];
   const allAppointments = appointments ?? [];
+  const hours = (businessHours ?? []) as BusinessHours[];
+  const typedBusiness = business as Business;
+  const maxDays = Math.min(typedBusiness.settings.max_advance_days, 60);
 
-  const slotsByStaff: Record<string, string[]> = {};
-  const dateRange = Array.from({ length: 14 }, (_, i) =>
+  const slotOptionsByStaffService: Record<string, SlotOption[]> = {};
+  const dateRange = Array.from({ length: maxDays }, (_, i) =>
     format(addDays(new Date(), i), "yyyy-MM-dd")
   );
 
@@ -60,34 +81,41 @@ export async function loadPublicBookingByBusinessId(businessId: string) {
       .eq("staff_member_id", member.id)
       .gte("end_at", new Date().toISOString());
 
-    const allSlots: string[] = [];
+    const effectiveAvailability = intersectAvailability(
+      hours,
+      member.staff_availability ?? []
+    );
 
     for (const service of activeServices) {
       if (!member.staff_services?.some((ss) => ss.service_id === service.id)) {
         continue;
       }
+
+      const allSlotOptions: SlotOption[] = [];
+
       for (const date of dateRange) {
-        const daySlots = generateSlots({
+        const daySlots = generateDaySlotOptions({
           date,
-          timezone: business.timezone,
+          timezone: typedBusiness.timezone,
           serviceDurationMinutes: service.duration_minutes,
-          settings: business.settings,
-          availability: member.staff_availability ?? [],
+          settings: typedBusiness.settings,
+          availability: effectiveAvailability,
           appointments: memberAppointments,
           timeOff: timeOff ?? [],
         });
-        allSlots.push(...daySlots);
+        allSlotOptions.push(...daySlots);
       }
-    }
 
-    slotsByStaff[member.id] = [...new Set(allSlots)].sort();
+      slotOptionsByStaffService[staffServiceSlotKey(member.id, service.id)] =
+        allSlotOptions.sort((a, b) => a.startAt.localeCompare(b.startAt));
+    }
   }
 
   return {
-    business: business as Business,
+    business: typedBusiness,
     services: activeServices,
     staff: bookableStaff,
-    slotsByStaff,
+    slotOptionsByStaffService,
     appointments: allAppointments,
   };
 }

@@ -43,11 +43,19 @@ export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 export const DEFAULT_BUSINESS_SETTINGS = {
-  slot_interval_minutes: 15,
+  slot_interval_minutes: 30,
   min_notice_hours: 2,
   max_advance_days: 60,
   auto_confirm: true,
 };
+
+export const DEFAULT_BUSINESS_HOURS = [
+  { day_of_week: 1, start_time: "09:00:00", end_time: "17:00:00" },
+  { day_of_week: 2, start_time: "09:00:00", end_time: "17:00:00" },
+  { day_of_week: 3, start_time: "09:00:00", end_time: "17:00:00" },
+  { day_of_week: 4, start_time: "09:00:00", end_time: "17:00:00" },
+  { day_of_week: 5, start_time: "09:00:00", end_time: "17:00:00" },
+] as const;
 
 export const WIDGET_POSITIONS = [
   { value: "bottom_right", label: "Bottom right" },

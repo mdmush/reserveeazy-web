@@ -21,7 +21,7 @@ export default async function CalendarPage() {
   const supabase = await createClient();
   const business = membership.businesses;
 
-  const [{ data: appointments }, { data: clients }, { data: services }, { data: staff }] =
+  const [{ data: appointments }, { data: clients }, { data: services }, { data: staff }, { data: businessHours }] =
     await Promise.all([
       supabase
         .from("appointments")
@@ -45,11 +45,18 @@ export default async function CalendarPage() {
         .eq("business_id", business.id)
         .eq("is_bookable", true)
         .order("display_name"),
+      supabase
+        .from("business_hours")
+        .select("*")
+        .eq("business_id", business.id)
+        .order("day_of_week")
+        .order("start_time"),
     ]);
 
   return (
     <CalendarView
       business={business}
+      businessHours={businessHours ?? []}
       appointments={(appointments ?? []) as unknown as AppointmentWithRelations[]}
       clients={clients ?? []}
       services={services ?? []}
