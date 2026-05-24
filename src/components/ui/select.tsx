@@ -6,7 +6,125 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+type SelectItemEntry = { value: unknown; label: string }
+
+type SelectItemsRegistry = {
+  register: (value: unknown, label: string) => void
+  unregister: (value: unknown) => void
+}
+
+const SelectItemsRegistryContext =
+  React.createContext<SelectItemsRegistry | null>(null)
+
+function extractTextFromChildren(node: React.ReactNode): string {
+  if (node == null || typeof node === "boolean") return ""
+  if (typeof node === "string" || typeof node === "number") return String(node)
+  if (Array.isArray(node)) return node.map(extractTextFromChildren).join("")
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
+    return extractTextFromChildren(node.props.children)
+  }
+  return ""
+}
+
+function itemValuesEqual(a: unknown, b: unknown) {
+  return Object.is(a, b) || a === b
+}
+
+function isSelectItemElement(
+  child: React.ReactElement
+): child is React.ReactElement<SelectPrimitive.Item.Props> {
+  return (
+    typeof child.type === "function" &&
+    (child.type as { displayName?: string }).displayName === "SelectItem"
+  )
+}
+
+/** Collect value/label pairs from SelectItem children before the popup mounts. */
+function collectSelectItemsFromTree(
+  node: React.ReactNode
+): SelectItemEntry[] {
+  const items: SelectItemEntry[] = []
+
+  React.Children.forEach(node, (child) => {
+    if (!React.isValidElement(child)) return
+
+    if (isSelectItemElement(child)) {
+      const { value, label, children: itemChildren } = child.props
+      if (value !== undefined) {
+        items.push({
+          value,
+          label: label ?? extractTextFromChildren(itemChildren),
+        })
+      }
+      return
+    }
+
+    const props = child.props as { children?: React.ReactNode }
+    if (props?.children) {
+      items.push(...collectSelectItemsFromTree(props.children))
+    }
+  })
+
+  return items
+}
+
+function Select<Value, Multiple extends boolean | undefined = false>({
+  items: itemsProp,
+  children,
+  ...props
+}: SelectPrimitive.Root.Props<Value, Multiple>) {
+  const collectedItems = React.useMemo(
+    () => (itemsProp ? null : collectSelectItemsFromTree(children)),
+    [itemsProp, children]
+  )
+
+  const [registeredItems, setRegisteredItems] = React.useState<SelectItemEntry[]>(
+    () => collectedItems ?? []
+  )
+
+  React.useLayoutEffect(() => {
+    if (itemsProp) return
+    if (collectedItems) {
+      setRegisteredItems(collectedItems)
+    }
+  }, [itemsProp, collectedItems])
+
+  const registry = React.useMemo<SelectItemsRegistry>(
+    () => ({
+      register: (value, label) => {
+        setRegisteredItems((prev) => {
+          const existing = prev.find((item) =>
+            itemValuesEqual(item.value, value)
+          )
+          if (existing?.label === label) return prev
+          return [
+            ...prev.filter((item) => !itemValuesEqual(item.value, value)),
+            { value, label },
+          ]
+        })
+      },
+      unregister: (value) => {
+        setRegisteredItems((prev) => {
+          if (!prev.some((item) => itemValuesEqual(item.value, value))) {
+            return prev
+          }
+          return prev.filter((item) => !itemValuesEqual(item.value, value))
+        })
+      },
+    }),
+    []
+  )
+
+  const items = itemsProp ?? registeredItems
+
+  return (
+    <SelectItemsRegistryContext.Provider value={registry}>
+      <SelectPrimitive.Root<Value, Multiple> items={items} {...props}>
+        {children}
+      </SelectPrimitive.Root>
+    </SelectItemsRegistryContext.Provider>
+  )
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -111,11 +229,22 @@ function SelectLabel({
 function SelectItem({
   className,
   children,
+  label: labelProp,
   ...props
 }: SelectPrimitive.Item.Props) {
+  const registry = React.useContext(SelectItemsRegistryContext)
+  const label = labelProp ?? extractTextFromChildren(children)
+
+  React.useLayoutEffect(() => {
+    if (!registry || props.value === undefined) return
+    registry.register(props.value, label)
+    return () => registry.unregister(props.value)
+  }, [registry, props.value, label])
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      label={label}
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
@@ -135,6 +264,7 @@ function SelectItem({
     </SelectPrimitive.Item>
   )
 }
+SelectItem.displayName = "SelectItem"
 
 function SelectSeparator({
   className,
