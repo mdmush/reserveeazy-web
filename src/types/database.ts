@@ -30,17 +30,20 @@ export interface Database {
           id: string;
           full_name: string | null;
           email: string | null;
+          is_superuser: boolean;
           created_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
           email?: string | null;
+          is_superuser?: boolean;
           created_at?: string;
         };
         Update: {
           full_name?: string | null;
           email?: string | null;
+          is_superuser?: boolean;
         };
         Relationships: [];
       };

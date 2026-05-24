@@ -7,8 +7,11 @@ export async function middleware(request: NextRequest) {
 
   const isAuthRoute =
     pathname.startsWith("/login") || pathname.startsWith("/signup");
+  const isAdminRoute = pathname.startsWith("/admin");
   const isProtected =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding");
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/onboarding") ||
+    isAdminRoute;
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
@@ -17,16 +20,43 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isAuthRoute && user) {
-    const { data: membership } = await supabase
-      .from("business_members")
-      .select("id")
-      .eq("user_id", user.id)
-      .limit(1)
+  if (isAdminRoute && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_superuser")
+      .eq("id", user.id)
       .maybeSingle();
 
+    if (!profile?.is_superuser) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  if (isAuthRoute && user) {
+    const [{ data: membership }, { data: profile }] = await Promise.all([
+      supabase
+        .from("business_members")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("is_superuser")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]);
+
     const url = request.nextUrl.clone();
-    url.pathname = membership ? "/dashboard" : "/onboarding";
+    if (membership) {
+      url.pathname = "/dashboard";
+    } else if (profile?.is_superuser) {
+      url.pathname = "/admin";
+    } else {
+      url.pathname = "/onboarding";
+    }
     return NextResponse.redirect(url);
   }
 

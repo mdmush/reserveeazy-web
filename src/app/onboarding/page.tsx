@@ -1,7 +1,13 @@
+import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/auth/onboarding-form";
 import { AuthShell } from "@/components/brand/auth-shell";
+import { getIsSuperuser } from "@/lib/superuser";
 
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  if (await getIsSuperuser()) {
+    redirect("/admin");
+  }
+
   return (
     <AuthShell
       title="Set up your business"

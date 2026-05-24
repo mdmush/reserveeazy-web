@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getPostAuthRedirectPath } from "@/lib/superuser";
 import {
   loginSchema,
   signupSchema,
@@ -31,14 +32,7 @@ export async function loginAction(data: LoginInput) {
 
   if (!user) return { error: "Authentication failed" };
 
-  const { data: membership } = await supabase
-    .from("business_members")
-    .select("id")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
-
-  redirect(membership ? "/dashboard" : "/onboarding");
+  redirect(await getPostAuthRedirectPath());
 }
 
 export async function signupAction(data: SignupInput) {
@@ -57,6 +51,15 @@ export async function signupAction(data: SignupInput) {
   });
 
   if (error) return { error: error.message };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect(await getPostAuthRedirectPath());
+  }
+
   redirect("/onboarding");
 }
 

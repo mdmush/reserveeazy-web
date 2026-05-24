@@ -11,6 +11,7 @@ import {
   ExternalLink,
   LogOut,
   LayoutDashboard,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,13 @@ const navItems = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-export function DashboardSidebar({ business }: { business: Business }) {
+export function DashboardSidebar({
+  business,
+  isSuperuser = false,
+}: {
+  business: Business;
+  isSuperuser?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
@@ -66,6 +73,16 @@ export function DashboardSidebar({ business }: { business: Business }) {
       </nav>
 
       <div className="border-t border-border p-3 space-y-2">
+        {isSuperuser && (
+          <LinkButton
+            variant="outline"
+            className="w-full justify-start border-primary/30 text-primary hover:bg-accent"
+            href="/admin"
+          >
+            <Shield className="h-4 w-4 mr-2" aria-hidden />
+            Platform admin
+          </LinkButton>
+        )}
         <LinkButton
           variant="outline"
           className="w-full justify-start border-primary/30 text-primary hover:bg-accent"
@@ -93,7 +110,13 @@ export function DashboardSidebar({ business }: { business: Business }) {
   );
 }
 
-export function MobileNav({ business }: { business: Business }) {
+export function MobileNav({
+  business,
+  isSuperuser = false,
+}: {
+  business: Business;
+  isSuperuser?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
@@ -132,6 +155,17 @@ export function MobileNav({ business }: { business: Business }) {
         })}
       </nav>
       <div className="flex gap-2 border-t border-border/60 p-2">
+        {isSuperuser && (
+          <LinkButton
+            variant="outline"
+            size="sm"
+            className="flex-1 border-primary/30 text-primary"
+            href="/admin"
+          >
+            <Shield className="h-4 w-4 mr-1.5" aria-hidden />
+            Admin
+          </LinkButton>
+        )}
         <LinkButton
           variant="outline"
           size="sm"
