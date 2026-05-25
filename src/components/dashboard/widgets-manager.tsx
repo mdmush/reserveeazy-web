@@ -271,8 +271,18 @@ function EmbedCodeDialog({
         <pre className="rounded-lg bg-muted p-4 text-xs overflow-x-auto whitespace-pre-wrap break-all">
           {code}
         </pre>
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <CopyButton text={code} label="Embed code" />
+          <LinkButton
+            variant="outline"
+            size="sm"
+            href={`/embed-demo?token=${widget.public_token}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink className="h-4 w-4 mr-1.5" aria-hidden />
+            View demo
+          </LinkButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

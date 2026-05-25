@@ -38,14 +38,9 @@ export default async function EmbedDemoPage({
     <div className="min-h-screen bg-neutral-100 p-8">
       <div className="mx-auto max-w-2xl rounded-xl border bg-white p-8 shadow-sm">
         <h1 className="text-xl font-semibold">Sample customer website</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The booking widget loads from the same origin as this page, so the
-          iframe works in Chrome. Use this page for local testing—not{" "}
-          <code className="text-xs">file://test.html</code>.
-        </p>
         <p className="mt-6 text-muted-foreground">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Scroll down
-          to see the floating button in the corner.
+        The booking widget loads from the same origin as this page, so the
+        iframe works in Chrome. Scroll down to see the floating button in the corner.
         </p>
       </div>
       <Script
