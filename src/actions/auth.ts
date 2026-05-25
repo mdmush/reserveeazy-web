@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_BUSINESS_HOURS } from "@/lib/constants";
 import { getPostAuthRedirectPath } from "@/lib/superuser";
+import { getAppUrl } from "@/lib/app-url";
 import {
   loginSchema,
   signupSchema,
@@ -48,6 +49,7 @@ export async function signupAction(data: SignupInput) {
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.fullName },
+      emailRedirectTo: `${getAppUrl()}/auth/confirm`,
     },
   });
 
