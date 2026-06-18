@@ -21,14 +21,31 @@ import { BrandLogo } from "@/components/brand/logo";
 import { logoutAction } from "@/actions/auth";
 import type { Business } from "@/types/database";
 
-const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
-  { href: "/dashboard/services", label: "Services", icon: Scissors },
-  { href: "/dashboard/staff", label: "Staff", icon: Users },
-  { href: "/dashboard/clients", label: "Clients", icon: UserCircle },
-  { href: "/dashboard/widgets", label: "Widgets", icon: Code },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+const accents = {
+  primary: { soft: "bg-secondary text-primary", solid: "bg-primary text-primary-foreground", ring: "ring-primary/20" },
+  blue: { soft: "bg-blue-soft text-blue-foreground", solid: "bg-blue text-white", ring: "ring-blue/20" },
+  coral: { soft: "bg-coral-soft text-coral-foreground", solid: "bg-coral text-white", ring: "ring-coral/20" },
+  teal: { soft: "bg-teal-soft text-teal-foreground", solid: "bg-teal text-white", ring: "ring-teal/20" },
+  violet: { soft: "bg-violet-soft text-violet-foreground", solid: "bg-violet text-white", ring: "ring-violet/20" },
+  amber: { soft: "bg-amber-soft text-amber-foreground", solid: "bg-amber text-white", ring: "ring-amber/20" },
+} as const;
+
+type Accent = keyof typeof accents;
+
+const navItems: {
+  href: string;
+  label: string;
+  icon: typeof Calendar;
+  exact?: boolean;
+  color: Accent;
+}[] = [
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true, color: "primary" },
+  { href: "/dashboard/calendar", label: "Calendar", icon: Calendar, color: "blue" },
+  { href: "/dashboard/services", label: "Services", icon: Scissors, color: "coral" },
+  { href: "/dashboard/staff", label: "Staff", icon: Users, color: "teal" },
+  { href: "/dashboard/clients", label: "Clients", icon: UserCircle, color: "violet" },
+  { href: "/dashboard/widgets", label: "Widgets", icon: Code, color: "amber" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, color: "primary" },
 ];
 
 export function DashboardSidebar({
@@ -55,19 +72,27 @@ export function DashboardSidebar({
             ? pathname === item.href
             : pathname.startsWith(item.href);
           const Icon = item.icon;
+          const accent = accents[item.color];
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 min-h-11 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                "flex items-center gap-3 rounded-xl px-2.5 py-2 min-h-11 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 active
-                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  ? cn(accent.soft, "ring-1", accent.ring)
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
-              <Icon className="h-4 w-4" aria-hidden />
+              <span
+                className={cn(
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
+                  active ? accent.solid : cn(accent.soft, "group-hover:opacity-100")
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden />
+              </span>
               {item.label}
             </Link>
           );
@@ -138,19 +163,20 @@ export function MobileNav({
             ? pathname === item.href
             : pathname.startsWith(item.href);
           const Icon = item.icon;
+          const accent = accents[item.color];
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2.5 min-h-11 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2.5 min-h-11 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent"
+                  ? cn(accent.soft, "ring-1", accent.ring)
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
-              <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <Icon className="h-4 w-4 shrink-0" aria-hidden />
               {item.label}
             </Link>
           );

@@ -254,7 +254,7 @@ export function SettingsForm({
               {hoursError && (
                 <p className="text-sm text-destructive">{hoursError}</p>
               )}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <Select value={dayOfWeek} onValueChange={(v) => v && setDayOfWeek(v)}>
                   <SelectTrigger>
                     <SelectValue />

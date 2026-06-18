@@ -8,20 +8,25 @@ interface BrandLogoProps {
 }
 
 const sizes = {
-  sm: { dot: "h-2 w-2", text: "text-base" },
-  md: { dot: "h-2.5 w-2.5", text: "text-xl" },
-  lg: { dot: "h-3 w-3", text: "text-2xl" },
+  sm: { dot: "h-5 w-5 rounded-lg", text: "text-base" },
+  md: { dot: "h-7 w-7 rounded-xl", text: "text-xl" },
+  lg: { dot: "h-8 w-8 rounded-xl", text: "text-2xl" },
 };
 
 export function BrandLogo({ className, href = "/", size = "md" }: BrandLogoProps) {
   const s = sizes[size];
 
   const content = (
-    <span className={cn("inline-flex items-center gap-2 font-bold tracking-tight", className)}>
+    <span className={cn("inline-flex items-center gap-2 font-extrabold tracking-tight", className)}>
       <span
-        className={cn("rounded-full bg-primary shadow-sm shadow-primary/30", s.dot)}
+        className={cn(
+          "brand-gradient inline-flex items-center justify-center font-black text-white shadow-[0_4px_12px_-4px_var(--primary)]",
+          s.dot
+        )}
         aria-hidden
-      />
+      >
+        <span className="text-[0.7em] leading-none">R</span>
+      </span>
       <span className={s.text}>
         Reserve<span className="text-primary">Eazy</span>
       </span>

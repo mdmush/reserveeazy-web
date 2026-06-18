@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { ShieldAlert } from "lucide-react";
 import {
   isDomainAllowed,
   loadEmbedWidgetContext,
@@ -27,8 +28,11 @@ export default async function EmbedBookingPage({
   ) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="max-w-md text-center space-y-2">
-          <h1 className="text-lg font-semibold text-foreground">
+        <div className="max-w-md rounded-2xl border bg-card p-8 text-center space-y-3 shadow-soft">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-soft text-amber-foreground">
+            <ShieldAlert className="h-6 w-6" aria-hidden />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">
             Widget not authorized
           </h1>
           <p className="text-sm text-muted-foreground">

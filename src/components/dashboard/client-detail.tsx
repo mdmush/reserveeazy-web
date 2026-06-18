@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format, parseISO } from "date-fns";
 import { clientSchema, type ClientInput } from "@/lib/validations";
 import { updateClientAction } from "@/actions/dashboard";
-import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
+import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_BADGE } from "@/lib/constants";
 import type { Client, Appointment } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,7 +150,7 @@ export function ClientDetail({
                       {format(parseISO(apt.start_at), "EEE, MMM d, yyyy · h:mm a")}
                     </p>
                   </div>
-                  <Badge variant="secondary">
+                  <Badge variant={APPOINTMENT_STATUS_BADGE[apt.status] ?? "secondary"}>
                     {APPOINTMENT_STATUS_LABELS[apt.status]}
                   </Badge>
                 </li>

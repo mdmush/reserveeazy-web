@@ -139,13 +139,23 @@ function ServiceFormDialog({
                 name="priceCents"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (cents)</FormLabel>
+                    <FormLabel>Price</FormLabel>
                     <FormControl>
-                      <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                          $
+                        </span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          className="pl-7"
+                          value={Number.isFinite(field.value) ? field.value / 100 : ""}
+                          onChange={(e) =>
+                            field.onChange(Math.round(Number(e.target.value) * 100))
+                          }
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -207,7 +217,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
           description="Add your first service so clients can start booking."
         />
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="overflow-hidden rounded-2xl border bg-card shadow-soft">
           <Table>
             <TableHeader>
               <TableRow>
@@ -234,7 +244,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
                   <TableCell>{formatDuration(service.duration_minutes)}</TableCell>
                   <TableCell>{formatPrice(service.price_cents)}</TableCell>
                   <TableCell>
-                    <Badge variant={service.is_active ? "default" : "secondary"}>
+                    <Badge variant={service.is_active ? "success" : "secondary"}>
                       {service.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
@@ -243,7 +253,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
                       <ServiceFormDialog
                         service={service}
                         trigger={
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" aria-label={`Edit ${service.name}`}>
                             <Pencil className="h-4 w-4" />
                           </Button>
                         }
@@ -251,6 +261,8 @@ export function ServicesManager({ services }: { services: Service[] }) {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label={`Delete ${service.name}`}
+                        className="text-muted-foreground hover:text-destructive"
                         onClick={() => handleDelete(service.id)}
                       >
                         <Trash2 className="h-4 w-4" />

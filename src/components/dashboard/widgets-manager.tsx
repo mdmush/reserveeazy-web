@@ -302,7 +302,7 @@ function RegenerateTokenButton({ widgetId }: { widgetId: string }) {
       toast.error(result.error);
       return;
     }
-    toast.success("Token regenerated — update embed code on your site");
+    toast.success("Token regenerated. Update the embed code on your site.");
     setOpen(false);
     router.refresh();
   }
@@ -387,7 +387,7 @@ export function WidgetsManager({
           description="Create a widget to get a copy-paste script for your website."
         />
       ) : (
-        <div className="rounded-lg border bg-card overflow-x-auto">
+        <div className="overflow-hidden rounded-2xl border bg-card shadow-soft">
           <Table>
             <TableHeader>
               <TableRow>

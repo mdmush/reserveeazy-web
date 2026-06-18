@@ -119,36 +119,42 @@ export function BookingWidget({
   }
 
   const cardButtonClass =
-    "w-full rounded-xl border p-4 text-left cursor-pointer transition-colors motion-reduce:transition-none hover:border-primary hover:bg-accent/50 focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-[0.98] motion-reduce:transform-none";
+    "group/option w-full rounded-2xl border border-border p-4 text-left cursor-pointer bg-card transition-all duration-150 motion-reduce:transition-none hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_10px_28px_-16px_var(--primary)] focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-[0.98] motion-reduce:transform-none";
 
   if (step === "confirmed" && selectedService && selectedStaff && selectedSlot) {
     return (
       <Card
-        className="max-w-lg mx-auto shadow-lg border-primary/10"
+        className="max-w-lg mx-auto card-glow"
         role="status"
         aria-live="polite"
       >
         <CardContent className="pt-10 pb-10 text-center space-y-5">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <CheckCircle2 className="h-9 w-9 text-primary" aria-hidden />
+          <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
+            <span className="absolute inset-0 rounded-full bg-success/15 animate-ping motion-reduce:hidden" aria-hidden />
+            <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-success text-white shadow-[0_12px_30px_-10px_var(--success)] animate-in zoom-in-50 duration-500">
+              <CheckCircle2 className="h-10 w-10" aria-hidden />
+            </span>
           </div>
-          <div>
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             <h2
               id={confirmHeadingId}
               tabIndex={-1}
-              className="text-2xl font-bold tracking-tight outline-none"
+              className="text-3xl font-extrabold tracking-tight outline-none"
             >
-              Booking confirmed!
+              Booking confirmed! 🎉
             </h2>
             <p className="text-muted-foreground mt-1">
               We look forward to seeing you.
             </p>
           </div>
-          <div className="rounded-xl bg-accent/60 p-4 text-sm text-left space-y-2">
-            <p className="font-medium text-accent-foreground">{selectedService.name}</p>
+          <div className="rounded-2xl bg-secondary p-4 text-sm text-left space-y-1.5 ring-1 ring-primary/10">
+            <p className="font-bold text-foreground">{selectedService.name}</p>
             <p className="text-muted-foreground">with {selectedStaff.display_name}</p>
             <p className="text-muted-foreground">{formatSlotDate(selectedSlot, business.timezone)}</p>
-            <p className="font-medium text-primary">{formatSlot(selectedSlot, business.timezone)}</p>
+            <p className="text-lg font-bold text-primary">{formatSlot(selectedSlot, business.timezone)}</p>
+            <p className="text-muted-foreground">
+              {formatDuration(selectedService.duration_minutes)} · {formatPrice(selectedService.price_cents)}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -158,9 +164,9 @@ export function BookingWidget({
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">{business.name}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">{business.name}</h1>
         <p className="text-muted-foreground mt-1">Book an appointment</p>
-        <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-primary" aria-hidden />
+        <div className="brand-gradient mx-auto mt-3 h-1.5 w-20 rounded-full" aria-hidden />
       </div>
 
       <ol
@@ -174,15 +180,19 @@ export function BookingWidget({
             <li key={s.key} className="flex flex-1 flex-col items-center gap-1.5">
               <div
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold motion-reduce:transition-none transition-colors",
-                  isActive && "bg-primary text-primary-foreground shadow-md",
-                  isComplete && !isActive && "bg-primary/20 text-primary",
+                  "flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold motion-reduce:transition-none transition-all",
+                  isActive && "brand-gradient text-white shadow-[0_6px_16px_-6px_var(--primary)] scale-110",
+                  isComplete && !isActive && "bg-success text-white",
                   !isActive && !isComplete && "bg-muted text-muted-foreground"
                 )}
                 aria-current={isActive ? "step" : undefined}
               >
                 <span className="sr-only">{s.label}: </span>
-                {i + 1}
+                {isComplete && !isActive ? (
+                  <CheckCircle2 className="h-5 w-5" aria-hidden />
+                ) : (
+                  i + 1
+                )}
               </div>
               <span
                 className={cn(
@@ -290,7 +300,13 @@ export function BookingWidget({
                   }}
                   className={cardButtonClass}
                 >
-                  <p className="font-medium">{member.display_name}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold">{member.display_name}</p>
+                    <ChevronRight
+                      className="h-4 w-4 text-muted-foreground transition-transform group-hover/option:translate-x-0.5 group-hover/option:text-primary motion-reduce:transition-none"
+                      aria-hidden
+                    />
+                  </div>
                 </button>
               ))
             )}

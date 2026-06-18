@@ -1,6 +1,6 @@
 import { format, parseISO } from "date-fns";
 import { fetchAdminAppointments } from "@/actions/admin";
-import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
+import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_BADGE } from "@/lib/constants";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,7 +65,7 @@ export default async function AdminAppointmentsPage({
                     <TableCell>{a.serviceName ?? "—"}</TableCell>
                     <TableCell>{a.staffName ?? "—"}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
+                      <Badge variant={APPOINTMENT_STATUS_BADGE[a.status] ?? "secondary"}>
                         {APPOINTMENT_STATUS_LABELS[a.status]}
                       </Badge>
                     </TableCell>

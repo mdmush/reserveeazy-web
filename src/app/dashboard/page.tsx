@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { format, parseISO } from "date-fns";
+import { Scissors, Users, ExternalLink, CalendarClock } from "lucide-react";
 import { getUserMembership } from "@/lib/business";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardOverviewEmpty } from "@/components/dashboard/empty-states";
@@ -7,7 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { LinkButton } from "@/components/ui/link-button";
-import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
+import {
+  APPOINTMENT_STATUS_LABELS,
+  APPOINTMENT_STATUS_BADGE,
+} from "@/lib/constants";
 
 export default async function DashboardPage() {
   const membership = await getUserMembership();
@@ -51,31 +54,40 @@ export default async function DashboardPage() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card tone="coral">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-coral-foreground">
                   Services
                 </CardTitle>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral text-white shadow-soft">
+                  <Scissors className="h-4 w-4" />
+                </span>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">{serviceCount}</p>
+                <p className="text-3xl font-extrabold tabular-nums">{serviceCount}</p>
               </CardContent>
             </Card>
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card tone="teal">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-teal-foreground">
                   Bookable staff
                 </CardTitle>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal text-white shadow-soft">
+                  <Users className="h-4 w-4" />
+                </span>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">{staffCount}</p>
+                <p className="text-3xl font-extrabold tabular-nums">{staffCount}</p>
               </CardContent>
             </Card>
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card tone="violet">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-violet-foreground">
                   Booking link
                 </CardTitle>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet text-white shadow-soft">
+                  <ExternalLink className="h-4 w-4" />
+                </span>
               </CardHeader>
               <CardContent>
                 <LinkButton variant="outline" size="sm" href={`/book/${business.slug}`} target="_blank">
@@ -108,18 +120,23 @@ export default async function DashboardPage() {
                     return (
                     <li
                       key={apt.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3"
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 p-3 transition-colors hover:border-primary/30 hover:bg-muted/40"
                     >
-                      <div>
-                        <p className="font-medium">{client?.full_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {service?.name} with {staffMember?.display_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(parseISO(apt.start_at), "EEE, MMM d · h:mm a")}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+                          <CalendarClock className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="font-semibold">{client?.full_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {service?.name} with {staffMember?.display_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(parseISO(apt.start_at), "EEE, MMM d · h:mm a")}
+                          </p>
+                        </div>
                       </div>
-                      <Badge variant="secondary">
+                      <Badge variant={APPOINTMENT_STATUS_BADGE[apt.status] ?? "secondary"}>
                         {APPOINTMENT_STATUS_LABELS[apt.status]}
                       </Badge>
                     </li>

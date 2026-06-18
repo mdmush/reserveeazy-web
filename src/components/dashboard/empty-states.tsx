@@ -1,5 +1,4 @@
 import { Calendar, Users, Scissors, ExternalLink } from "lucide-react";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkButton } from "@/components/ui/link-button";
 
@@ -12,11 +11,11 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/20 bg-accent/30 p-12 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <div className="mesh-bg flex flex-col items-center justify-center rounded-3xl border border-dashed border-primary/25 p-12 text-center">
+      <div className="brand-gradient mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-[0_10px_28px_-10px_var(--primary)]">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h3 className="text-lg font-bold">{title}</h3>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
       {action && (
         <LinkButton className="mt-6" href={action.href}>
@@ -27,47 +26,48 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   );
 }
 
+const overviewSteps = [
+  {
+    icon: Scissors,
+    title: "Add services",
+    body: "Define what clients can book: haircuts, massages, consultations, and more.",
+    tile: "bg-coral text-white",
+    action: { label: "Manage services", href: "/dashboard/services", variant: "default" as const },
+  },
+  {
+    icon: Users,
+    title: "Add staff",
+    body: "Add team members, assign services, and set their weekly availability.",
+    tile: "bg-teal text-white",
+    action: { label: "Manage staff", href: "/dashboard/staff", variant: "default" as const },
+  },
+];
+
 export function DashboardOverviewEmpty({ slug }: { slug: string }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="border-border/60 shadow-sm hover:shadow-md transition-shadow">
+      {overviewSteps.map((step) => (
+        <Card key={step.title} interactive>
+          <CardHeader>
+            <div className={`mb-1 flex h-11 w-11 items-center justify-center rounded-2xl ${step.tile} shadow-soft`}>
+              <step.icon className="h-5 w-5" />
+            </div>
+            <CardTitle className="text-base">{step.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">{step.body}</p>
+            <LinkButton size="sm" variant={step.action.variant} href={step.action.href}>
+              {step.action.label}
+            </LinkButton>
+          </CardContent>
+        </Card>
+      ))}
+      <Card interactive>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Scissors className="h-4 w-4" />
-            Add services
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Define what clients can book — haircuts, massages, consultations, and more.
-          </p>
-          <LinkButton size="sm" href="/dashboard/services">
-            Manage services
-          </LinkButton>
-        </CardContent>
-      </Card>
-      <Card className="border-border/60 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4" />
-            Add staff
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Add team members, assign services, and set their weekly availability.
-          </p>
-          <LinkButton size="sm" href="/dashboard/staff">
-            Manage staff
-          </LinkButton>
-        </CardContent>
-      </Card>
-      <Card className="border-border/60 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ExternalLink className="h-4 w-4" />
-            Share booking link
-          </CardTitle>
+          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-violet text-white shadow-soft">
+            <ExternalLink className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-base">Share booking link</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">

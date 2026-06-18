@@ -13,7 +13,7 @@ import {
 import { fromZonedTime } from "date-fns-tz";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
+import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_BADGE } from "@/lib/constants";
 import {
   createAppointmentAction,
   updateAppointmentStatusAction,
@@ -385,7 +385,7 @@ function AppointmentDetailDialog({
             )}{" "}
             – {formatSlot(appointment.end_at, timezone)}
           </p>
-          <Badge variant="secondary">
+          <Badge variant={APPOINTMENT_STATUS_BADGE[appointment.status] ?? "secondary"}>
             {APPOINTMENT_STATUS_LABELS[appointment.status]}
           </Badge>
           <div className="flex flex-wrap gap-2 pt-2">

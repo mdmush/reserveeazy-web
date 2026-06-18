@@ -245,7 +245,7 @@ function AvailabilityDialog({ staff }: { staff: StaffWithRelations }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Availability — {staff.display_name}</DialogTitle>
+          <DialogTitle>Availability · {staff.display_name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           {staff.staff_availability?.length ? (
@@ -273,7 +273,7 @@ function AvailabilityDialog({ staff }: { staff: StaffWithRelations }) {
             <p className="text-sm text-muted-foreground">No availability set yet.</p>
           )}
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <Select value={dayOfWeek} onValueChange={(v) => v && setDayOfWeek(v)}>
               <SelectTrigger>
                 <SelectValue />

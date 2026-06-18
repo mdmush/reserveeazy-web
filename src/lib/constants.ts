@@ -42,6 +42,27 @@ export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
   no_show: "No show",
 };
 
+/** Maps an appointment status to a Badge variant (see components/ui/badge). */
+export const APPOINTMENT_STATUS_BADGE: Record<
+  string,
+  "amber" | "teal" | "success" | "secondary" | "destructive"
+> = {
+  pending: "amber",
+  confirmed: "teal",
+  completed: "success",
+  cancelled: "secondary",
+  no_show: "destructive",
+};
+
+/** Maps an appointment status to a globals.css status-* class (calendar blocks). */
+export const APPOINTMENT_STATUS_CLASS: Record<string, string> = {
+  pending: "status-pending",
+  confirmed: "status-confirmed",
+  cancelled: "status-cancelled",
+  completed: "status-completed",
+  no_show: "status-no-show",
+};
+
 export const DEFAULT_BUSINESS_SETTINGS = {
   slot_interval_minutes: 30,
   min_notice_hours: 2,

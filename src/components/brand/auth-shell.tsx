@@ -21,10 +21,12 @@ export function AuthShell({ children, title, subtitle, step }: AuthShellProps) {
 
   return (
     <div className="flex min-h-screen">
-      <div className="hidden lg:flex lg:w-[45%] brand-gradient flex-col justify-between p-10 text-white">
-        <BrandLogo href="/" className="text-white [&_span:last-child]:text-white" />
-        <div className="space-y-6">
-          <p className="text-3xl font-bold leading-tight">
+      <div className="relative hidden overflow-hidden lg:flex lg:w-[45%] brand-gradient flex-col justify-between p-10 text-white">
+        <div className="pointer-events-none absolute -right-20 -top-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber/30 blur-3xl" />
+        <BrandLogo href="/" className="relative text-white [&_span:last-child]:text-white" />
+        <div className="relative space-y-6">
+          <p className="text-4xl font-extrabold leading-[1.1]">
             Run your bookings
             <br />
             the easy way
@@ -36,13 +38,15 @@ export function AuthShell({ children, title, subtitle, step }: AuthShellProps) {
           <ul className="space-y-3">
             {benefits.map((b) => (
               <li key={b} className="flex items-center gap-3 text-white/90">
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-white" aria-hidden />
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <CheckCircle2 className="h-4 w-4 text-white" aria-hidden />
+                </span>
                 {b}
               </li>
             ))}
           </ul>
         </div>
-        <p className="text-sm text-white/60">Trusted by appointment-based businesses</p>
+        <p className="relative text-sm text-white/70">Trusted by appointment-based businesses</p>
       </div>
 
       <main

@@ -23,6 +23,27 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+
+  /* Vibrant multi-accent system */
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
+  --color-coral-foreground: var(--coral-foreground);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-amber-foreground: var(--amber-foreground);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-teal-foreground: var(--teal-foreground);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-blue-foreground: var(--blue-foreground);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-foreground: var(--violet-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-foreground: var(--success-foreground);
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -46,41 +67,66 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Strong custom easing (built-in CSS easings are too weak) */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 :root {
-  --background: #fffbfb;
-  --foreground: #1a1212;
+  --background: #fffaf8;
+  --foreground: #1c1517;
   --card: #ffffff;
-  --card-foreground: #1a1212;
+  --card-foreground: #1c1517;
   --popover: #ffffff;
-  --popover-foreground: #1a1212;
-  --primary: #cb2030;
+  --popover-foreground: #1c1517;
+  --primary: #e11d34;
   --primary-foreground: #ffffff;
-  --secondary: #fff4f0;
-  --secondary-foreground: #7a1a24;
-  --muted: #f5f0ef;
-  --muted-foreground: #6b5c5c;
-  --accent: #fde8ea;
+  --secondary: #fff1ec;
+  --secondary-foreground: #8a1622;
+  --muted: #f6f0ef;
+  --muted-foreground: #6d5f60;
+  --accent: #ffe7ea;
   --accent-foreground: #9a1824;
   --destructive: #dc2626;
-  --border: #f0e0de;
-  --input: #f0e0de;
-  --ring: #cb203066;
-  --chart-1: #cb2030;
-  --chart-2: #e84550;
-  --chart-3: #f4a261;
-  --chart-4: #2a9d8f;
-  --chart-5: #457b9d;
-  --radius: 0.75rem;
+  --border: #f1e1df;
+  --input: #efdedc;
+  --ring: #e11d3466;
+
+  /* Vibrant multi-accent palette (base / soft tint bg / readable foreground) */
+  --coral: #fb6a4a;
+  --coral-soft: #ffe8e0;
+  --coral-foreground: #b23a1f;
+  --amber: #f5a524;
+  --amber-soft: #fdeecb;
+  --amber-foreground: #92600a;
+  --teal: #14b8a6;
+  --teal-soft: #d2f3ee;
+  --teal-foreground: #0c7d70;
+  --blue: #3b82f6;
+  --blue-soft: #dde9ff;
+  --blue-foreground: #1d4ed8;
+  --violet: #7c5cdb;
+  --violet-soft: #e8e1fb;
+  --violet-foreground: #573ab0;
+  --success: #22c55e;
+  --success-soft: #d6f5e0;
+  --success-foreground: #15803d;
+
+  --chart-1: #e11d34;
+  --chart-2: #fb6a4a;
+  --chart-3: #f5a524;
+  --chart-4: #14b8a6;
+  --chart-5: #3b82f6;
+  --radius: 1rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #1a1212;
-  --sidebar-primary: #cb2030;
+  --sidebar-foreground: #1c1517;
+  --sidebar-primary: #e11d34;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fde8ea;
+  --sidebar-accent: #ffe7ea;
   --sidebar-accent-foreground: #9a1824;
-  --sidebar-border: #f0e0de;
-  --sidebar-ring: #cb203066;
+  --sidebar-border: #f1e1df;
+  --sidebar-ring: #e11d3466;
 }
 
 @layer base {
@@ -100,56 +146,233 @@
   h4 {
     @apply font-heading tracking-tight;
   }
+  h1 {
+    letter-spacing: -0.025em;
+  }
 }
 
 @layer utilities {
   .brand-gradient {
-    background: linear-gradient(135deg, #cb2030 0%, #e84550 100%);
+    background: linear-gradient(
+      135deg,
+      #e11d34 0%,
+      #fb4d4d 45%,
+      #fb6a4a 75%,
+      #f5a524 100%
+    );
   }
 
   .brand-gradient-subtle {
     background: linear-gradient(
       135deg,
-      #fde8ea 0%,
-      #fff4f0 50%,
-      #fffbfb 100%
+      #ffe7ea 0%,
+      #fff1ec 50%,
+      #fffaf8 100%
     );
   }
 
   .hero-glow {
     background: radial-gradient(
       ellipse 80% 60% at 50% 0%,
-      #fde8ea 0%,
+      #ffe7ea 0%,
       transparent 70%
     );
   }
 
+  /* Soft multi-color blob backdrop for hero / auth / empty states */
+  .mesh-bg {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(at 8% 6%, color-mix(in oklab, var(--primary) 22%, transparent) 0px, transparent 45%),
+      radial-gradient(at 92% 4%, color-mix(in oklab, var(--amber) 22%, transparent) 0px, transparent 42%),
+      radial-gradient(at 78% 88%, color-mix(in oklab, var(--violet) 18%, transparent) 0px, transparent 45%),
+      radial-gradient(at 14% 92%, color-mix(in oklab, var(--teal) 16%, transparent) 0px, transparent 45%);
+  }
+
+  /* Scroll-triggered entrance (paired with <Reveal>) — transform + opacity only */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s var(--ease-out-strong),
+      transform 0.7s var(--ease-out-strong),
+      filter 0.7s var(--ease-out-strong);
+    filter: blur(6px);
+    will-change: transform, opacity;
+  }
+  .reveal[data-reveal="left"] {
+    transform: translateX(-28px);
+  }
+  .reveal[data-reveal="right"] {
+    transform: translateX(28px);
+  }
+  .reveal[data-reveal="scale"] {
+    transform: scale(0.96);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* Ambient floating blobs (gentle, decorative depth) */
+  @keyframes float-blob {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -22px, 0);
+    }
+  }
+  .float-slow {
+    animation: float-blob 9s ease-in-out infinite;
+  }
+  .float-slower {
+    animation: float-blob 14s ease-in-out infinite;
+  }
+
+  /* Scroll progress bar — pure CSS scroll-driven where supported, hidden otherwise */
+  .scroll-progress {
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  /* Edge-faded infinite marquee (one per page) */
+  @keyframes marquee-x {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .marquee {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent,
+      #000 8%,
+      #000 92%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      #000 8%,
+      #000 92%,
+      transparent
+    );
+  }
+  .marquee-track {
+    display: inline-flex;
+    width: max-content;
+    animation: marquee-x 32s linear infinite;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* Draws a connecting line as it enters view (paired with .is-visible) */
+  .grow-line {
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.9s var(--ease-out-strong);
+  }
+  .grow-line.is-visible,
+  .is-visible .grow-line {
+    transform: scaleX(1);
+  }
+
+  /* Fine film grain — apply on a fixed/absolute, pointer-events-none layer only */
+  .grain-overlay {
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+  }
+
+  /* Soft, lightly-tinted depth */
+  .shadow-soft {
+    box-shadow: 0 1px 2px -1px color-mix(in oklab, var(--foreground) 12%, transparent),
+      0 8px 24px -16px color-mix(in oklab, var(--foreground) 30%, transparent);
+  }
+  .card-glow {
+    box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+  .card-glow-amber {
+    box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--amber) 40%, transparent);
+  }
+  .card-glow-teal {
+    box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--teal) 40%, transparent);
+  }
+
+  /* Status tones — multi-color, wired to accent tokens */
   .status-pending {
-    @apply border bg-secondary text-secondary-foreground;
-    border-color: color-mix(in oklab, var(--chart-3) 40%, var(--border));
+    @apply border bg-amber-soft text-amber-foreground;
+    border-color: color-mix(in oklab, var(--amber) 35%, transparent);
   }
-
   .status-confirmed {
-    @apply border bg-primary/10 text-primary;
-    border-color: color-mix(in oklab, var(--primary) 30%, var(--border));
+    @apply border bg-teal-soft text-teal-foreground;
+    border-color: color-mix(in oklab, var(--teal) 35%, transparent);
   }
-
   .status-cancelled {
     @apply border border-border bg-muted text-muted-foreground line-through;
   }
-
   .status-completed {
-    @apply border bg-accent text-accent-foreground;
-    border-color: color-mix(in oklab, var(--chart-4) 35%, var(--border));
+    @apply border bg-success-soft text-success-foreground;
+    border-color: color-mix(in oklab, var(--success) 35%, transparent);
   }
-
   .status-no-show {
     @apply border bg-destructive/10 text-destructive;
     border-color: color-mix(in oklab, var(--destructive) 30%, var(--border));
   }
 }
 
+/* CSS scroll-driven motion (progressive enhancement, modern browsers only) */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes grow-x {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+    .scroll-progress {
+      animation: grow-x linear both;
+      animation-timeline: scroll(root);
+    }
+
+    /* Hero blobs drift as the hero scrolls out of view */
+    @keyframes drift-up {
+      to {
+        transform: translateY(-90px);
+      }
+    }
+    @keyframes drift-down {
+      to {
+        transform: translateY(70px);
+      }
+    }
+    .parallax-up {
+      animation: drift-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+    .parallax-down {
+      animation: drift-down linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
   *,
   *::before,
   *::after {

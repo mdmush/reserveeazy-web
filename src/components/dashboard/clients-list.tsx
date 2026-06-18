@@ -180,7 +180,7 @@ export function ClientsList({ clients }: { clients: Client[] }) {
           description="Clients are added automatically when they book online, or you can add them manually."
         />
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="overflow-hidden rounded-2xl border bg-card shadow-soft">
           <Table>
             <TableHeader>
               <TableRow>

@@ -45,7 +45,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full shadow-lg shadow-primary/5 border-border/60 rounded-xl">
+    <Card className="w-full card-glow">
       <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

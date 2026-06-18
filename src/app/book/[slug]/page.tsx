@@ -15,8 +15,7 @@ export default async function PublicBookingPage({
   const { business, services, staff, slotOptionsByStaffService, appointments } = data;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 brand-gradient-subtle opacity-40" />
+    <div className="mesh-bg min-h-screen py-10 px-4 relative overflow-hidden">
       <main id="main-content" className="relative">
         <BookingWidget
           business={business}
