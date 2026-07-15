@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Trash2 } from "lucide-react";
+import { Clock, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { settingsSchema, type SettingsInput } from "@/lib/validations";
 import {
   addBusinessHoursAction,
@@ -17,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -44,12 +44,12 @@ export function SettingsForm({
   businessHours: BusinessHours[];
 }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [hoursError, setHoursError] = useState<string | null>(null);
   const [dayOfWeek, setDayOfWeek] = useState("1");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
+  const [adding, startAddTransition] = useTransition();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removing, startRemoveTransition] = useTransition();
   const settings = business.settings;
 
   const form = useForm<SettingsInput>({
@@ -67,39 +67,42 @@ export function SettingsForm({
   });
 
   async function onSubmit(values: SettingsInput) {
-    setError(null);
-    setSuccess(false);
     const result = await updateSettingsAction(values);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       return;
     }
-    setSuccess(true);
+    toast.success("Settings saved");
     router.refresh();
   }
 
-  async function handleAddHours() {
-    setHoursError(null);
-    const result = await addBusinessHoursAction({
-      dayOfWeek: parseInt(dayOfWeek),
-      startTime,
-      endTime,
+  function handleAddHours() {
+    startAddTransition(async () => {
+      const result = await addBusinessHoursAction({
+        dayOfWeek: parseInt(dayOfWeek),
+        startTime,
+        endTime,
+      });
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Hours added");
+      router.refresh();
     });
-    if (result.error) {
-      setHoursError(result.error);
-      return;
-    }
-    router.refresh();
   }
 
-  async function handleDeleteHours(id: string) {
-    setHoursError(null);
-    const result = await deleteBusinessHoursAction(id);
-    if (result.error) {
-      setHoursError(result.error);
-      return;
-    }
-    router.refresh();
+  function handleDeleteHours(id: string) {
+    setRemovingId(id);
+    startRemoveTransition(async () => {
+      const result = await deleteBusinessHoursAction(id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Hours removed");
+      router.refresh();
+    });
   }
 
   return (
@@ -111,17 +114,6 @@ export function SettingsForm({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert>
-              <AlertDescription>Settings saved successfully.</AlertDescription>
-            </Alert>
-          )}
-
           <Card>
             <CardHeader>
               <CardTitle>Business details</CardTitle>
@@ -239,9 +231,14 @@ export function SettingsForm({
                         variant="ghost"
                         size="icon"
                         aria-label={`Remove hours for ${DAYS_OF_WEEK[hours.day_of_week]}`}
+                        disabled={removing}
                         onClick={() => handleDeleteHours(hours.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {removing && removingId === hours.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </li>
                   ))}
@@ -250,9 +247,6 @@ export function SettingsForm({
                 <p className="text-sm text-muted-foreground">
                   No business hours set yet. Add hours so clients can book online.
                 </p>
-              )}
-              {hoursError && (
-                <p className="text-sm text-destructive">{hoursError}</p>
               )}
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <Select value={dayOfWeek} onValueChange={(v) => v && setDayOfWeek(v)}>
@@ -278,7 +272,15 @@ export function SettingsForm({
                   onChange={(e) => setEndTime(e.target.value)}
                 />
               </div>
-              <Button type="button" variant="outline" onClick={handleAddHours}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={adding}
+                onClick={handleAddHours}
+              >
+                {adding && (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                )}
                 Add hours
               </Button>
             </CardContent>
@@ -363,7 +365,12 @@ export function SettingsForm({
             </CardContent>
           </Card>
 
-          <Button type="submit">Save settings</Button>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting && (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            )}
+            Save settings
+          </Button>
         </form>
       </Form>
     </div>

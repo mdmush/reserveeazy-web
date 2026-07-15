@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+import { Building2, Users, CalendarClock, CalendarCheck } from "lucide-react";
 import { fetchAdminOverviewStats } from "@/actions/admin";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/shell/stat-card";
 
 export default async function AdminOverviewPage() {
   const stats = await fetchAdminOverviewStats();
@@ -16,50 +18,14 @@ export default async function AdminOverviewPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Businesses
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.businessCount}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.userCount}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Appointments (7d)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.appointmentWeek}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Appointments (total)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.appointmentTotal}</p>
-          </CardContent>
-        </Card>
+        <StatCard title="Businesses" tone="blue" icon={Building2} value={stats.businessCount} />
+        <StatCard title="Users" tone="violet" icon={Users} value={stats.userCount} />
+        <StatCard title="Appointments (7d)" tone="teal" icon={CalendarClock} value={stats.appointmentWeek} />
+        <StatCard title="Appointments (total)" tone="primary" icon={CalendarCheck} value={stats.appointmentTotal} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/60 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Recent businesses</CardTitle>
           </CardHeader>
@@ -89,7 +55,7 @@ export default async function AdminOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Recent signups</CardTitle>
           </CardHeader>

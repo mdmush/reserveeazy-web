@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { serviceSchema, type ServiceInput } from "@/lib/validations";
 import {
   createServiceAction,
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -54,7 +56,6 @@ function ServiceFormDialog({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ServiceInput>({
     resolver: zodResolver(serviceSchema),
@@ -68,14 +69,14 @@ function ServiceFormDialog({
   });
 
   async function onSubmit(values: ServiceInput) {
-    setError(null);
     const result = service
       ? await updateServiceAction(service.id, values)
       : await createServiceAction(values);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success(service ? "Service saved" : "Service created");
     setOpen(false);
     router.refresh();
   }
@@ -89,7 +90,6 @@ function ServiceFormDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <FormField
               control={form.control}
               name="name"
@@ -174,7 +174,14 @@ function ServiceFormDialog({
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              )}
               {service ? "Save changes" : "Create service"}
             </Button>
           </form>
@@ -186,12 +193,7 @@ function ServiceFormDialog({
 
 export function ServicesManager({ services }: { services: Service[] }) {
   const router = useRouter();
-
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this service?")) return;
-    await deleteServiceAction(id);
-    router.refresh();
-  }
+  const [deleting, setDeleting] = useState<Service | null>(null);
 
   return (
     <div className="space-y-6">
@@ -263,7 +265,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
                         size="icon"
                         aria-label={`Delete ${service.name}`}
                         className="text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDelete(service.id)}
+                        onClick={() => setDeleting(service)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -275,6 +277,28 @@ export function ServicesManager({ services }: { services: Service[] }) {
           </Table>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(open) => {
+          if (!open) setDeleting(null);
+        }}
+        title="Delete service?"
+        description={
+          deleting
+            ? `This permanently removes “${deleting.name}”. Existing appointments keep their records.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          if (!deleting) return;
+          const result = await deleteServiceAction(deleting.id);
+          if (result?.error) return { error: result.error };
+          toast.success("Service deleted");
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

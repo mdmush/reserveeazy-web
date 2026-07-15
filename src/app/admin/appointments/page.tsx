@@ -1,7 +1,9 @@
 import { format, parseISO } from "date-fns";
+import { CalendarClock } from "lucide-react";
 import { fetchAdminAppointments } from "@/actions/admin";
 import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_BADGE } from "@/lib/constants";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/dashboard/empty-states";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -31,11 +33,15 @@ export default async function AdminAppointmentsPage({
         description={`${total} appointment${total === 1 ? "" : "s"} across all businesses`}
       />
 
-      <Card className="border-border/60 shadow-sm">
-        <CardContent className="p-0">
-          {appointments.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">No appointments yet.</p>
-          ) : (
+      {appointments.length === 0 ? (
+        <EmptyState
+          icon={<CalendarClock className="h-10 w-10" />}
+          title="No appointments yet"
+          description="Appointments booked across all businesses will show up here."
+        />
+      ) : (
+        <Card>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -76,9 +82,9 @@ export default async function AdminAppointmentsPage({
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, parseISO } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { clientSchema, type ClientInput } from "@/lib/validations";
 import { updateClientAction } from "@/actions/dashboard";
 import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_BADGE } from "@/lib/constants";
@@ -37,7 +38,6 @@ export function ClientDetail({
   appointments: AppointmentWithRelations[];
 }) {
   const router = useRouter();
-  const [saved, setSaved] = useState(false);
 
   const form = useForm<ClientInput>({
     resolver: zodResolver(clientSchema),
@@ -51,11 +51,12 @@ export function ClientDetail({
 
   async function onSubmit(values: ClientInput) {
     const result = await updateClientAction(client.id, values);
-    if (!result.error) {
-      setSaved(true);
-      router.refresh();
-      setTimeout(() => setSaved(false), 2000);
+    if (result.error) {
+      toast.error(result.error);
+      return;
     }
+    toast.success("Client saved");
+    router.refresh();
   }
 
   return (
@@ -121,7 +122,12 @@ export function ClientDetail({
                   </FormItem>
                 )}
               />
-              <Button type="submit">{saved ? "Saved!" : "Save changes"}</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                )}
+                Save changes
+              </Button>
             </form>
           </Form>
         </CardContent>

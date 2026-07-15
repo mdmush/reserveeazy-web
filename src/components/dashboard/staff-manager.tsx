@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2, Clock } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { staffSchema, type StaffInput } from "@/lib/validations";
 import {
   createStaffAction,
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -63,7 +65,6 @@ function StaffFormDialog({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<StaffInput>({
     resolver: zodResolver(staffSchema),
@@ -77,14 +78,14 @@ function StaffFormDialog({
   });
 
   async function onSubmit(values: StaffInput) {
-    setError(null);
     const result = staff
       ? await updateStaffAction(staff.id, values)
       : await createStaffAction(values);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success(staff ? "Staff member saved" : "Staff member added");
     setOpen(false);
     router.refresh();
   }
@@ -98,7 +99,6 @@ function StaffFormDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <FormField
               control={form.control}
               name="displayName"
@@ -198,7 +198,14 @@ function StaffFormDialog({
                 )}
               />
             )}
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              )}
               {staff ? "Save changes" : "Add staff member"}
             </Button>
           </form>
@@ -214,25 +221,37 @@ function AvailabilityDialog({ staff }: { staff: StaffWithRelations }) {
   const [dayOfWeek, setDayOfWeek] = useState("1");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
-  const [error, setError] = useState<string | null>(null);
+  const [adding, startAddTransition] = useTransition();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removing, startRemoveTransition] = useTransition();
 
-  async function handleAdd() {
-    setError(null);
-    const result = await addAvailabilityAction(staff.id, {
-      dayOfWeek: parseInt(dayOfWeek),
-      startTime,
-      endTime,
+  function handleAdd() {
+    startAddTransition(async () => {
+      const result = await addAvailabilityAction(staff.id, {
+        dayOfWeek: parseInt(dayOfWeek),
+        startTime,
+        endTime,
+      });
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Hours added");
+      router.refresh();
     });
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-    router.refresh();
   }
 
-  async function handleDelete(id: string) {
-    await deleteAvailabilityAction(id);
-    router.refresh();
+  function handleDelete(id: string) {
+    setRemovingId(id);
+    startRemoveTransition(async () => {
+      const result = await deleteAvailabilityAction(id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Hours removed");
+      router.refresh();
+    });
   }
 
   return (
@@ -262,9 +281,14 @@ function AvailabilityDialog({ staff }: { staff: StaffWithRelations }) {
                   <Button
                     variant="ghost"
                     size="icon"
+                    disabled={removing}
                     onClick={() => handleDelete(a.id)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {removing && removingId === a.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </li>
               ))}
@@ -272,7 +296,6 @@ function AvailabilityDialog({ staff }: { staff: StaffWithRelations }) {
           ) : (
             <p className="text-sm text-muted-foreground">No availability set yet.</p>
           )}
-          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <Select value={dayOfWeek} onValueChange={(v) => v && setDayOfWeek(v)}>
               <SelectTrigger>
@@ -289,7 +312,8 @@ function AvailabilityDialog({ staff }: { staff: StaffWithRelations }) {
             <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </div>
-          <Button onClick={handleAdd} className="w-full">
+          <Button onClick={handleAdd} className="w-full" disabled={adding}>
+            {adding && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             Add hours
           </Button>
         </div>
@@ -306,13 +330,7 @@ export function StaffManager({
   services: Service[];
 }) {
   const router = useRouter();
-
-  async function handleDelete(id: string, role: string) {
-    if (role === "owner") return;
-    if (!confirm("Remove this staff member?")) return;
-    await deleteStaffAction(id);
-    router.refresh();
-  }
+  const [deleting, setDeleting] = useState<StaffWithRelations | null>(null);
 
   return (
     <div className="space-y-6">
@@ -366,7 +384,8 @@ export function StaffManager({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(member.id, member.role)}
+                      aria-label={`Remove ${member.display_name}`}
+                      onClick={() => setDeleting(member)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -383,6 +402,28 @@ export function StaffManager({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(open) => {
+          if (!open) setDeleting(null);
+        }}
+        title="Remove staff member?"
+        description={
+          deleting
+            ? `This removes ${deleting.display_name} from your team. Existing appointments keep their records.`
+            : undefined
+        }
+        confirmLabel="Remove"
+        destructive
+        onConfirm={async () => {
+          if (!deleting) return;
+          const result = await deleteStaffAction(deleting.id);
+          if (result?.error) return { error: result.error };
+          toast.success("Staff member removed");
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

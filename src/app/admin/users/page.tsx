@@ -1,6 +1,8 @@
 import { format, parseISO } from "date-fns";
+import { Users } from "lucide-react";
 import { fetchAdminUsers } from "@/actions/admin";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/dashboard/empty-states";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -22,11 +24,15 @@ export default async function AdminUsersPage() {
         description={`${users.length} registered user${users.length === 1 ? "" : "s"}`}
       />
 
-      <Card className="border-border/60 shadow-sm">
-        <CardContent className="p-0">
-          {users.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">No users yet.</p>
-          ) : (
+      {users.length === 0 ? (
+        <EmptyState
+          icon={<Users className="h-10 w-10" />}
+          title="No users yet"
+          description="Registered users will show up here as soon as people sign up."
+        />
+      ) : (
+        <Card>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -61,9 +67,9 @@ export default async function AdminUsersPage() {
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

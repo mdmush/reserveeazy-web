@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format, parseISO } from "date-fns";
+import { CalendarClock, Scissors } from "lucide-react";
 import { fetchAdminBusinessDetail } from "@/actions/admin";
 import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
 import { formatPrice, formatDuration } from "@/lib/format";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/dashboard/empty-states";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -41,7 +43,7 @@ export default async function AdminBusinessDetailPage({
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-border/60 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Type
@@ -51,7 +53,7 @@ export default async function AdminBusinessDetailPage({
             <p className="font-medium capitalize">{business.business_type.replace("_", " ")}</p>
           </CardContent>
         </Card>
-        <Card className="border-border/60 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Auto-confirm
@@ -63,7 +65,7 @@ export default async function AdminBusinessDetailPage({
             </p>
           </CardContent>
         </Card>
-        <Card className="border-border/60 shadow-sm">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Created
@@ -77,7 +79,7 @@ export default async function AdminBusinessDetailPage({
         </Card>
       </div>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Members</CardTitle>
         </CardHeader>
@@ -107,13 +109,17 @@ export default async function AdminBusinessDetailPage({
         </CardContent>
       </Card>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Services</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className={services.length === 0 ? undefined : "p-0"}>
           {services.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">No services.</p>
+            <EmptyState
+              icon={<Scissors className="h-10 w-10" />}
+              title="No services yet"
+              description="This business hasn't added any services."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -139,13 +145,17 @@ export default async function AdminBusinessDetailPage({
         </CardContent>
       </Card>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Recent appointments</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className={appointments.length === 0 ? undefined : "p-0"}>
           {appointments.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">No appointments.</p>
+            <EmptyState
+              icon={<CalendarClock className="h-10 w-10" />}
+              title="No appointments yet"
+              description="Appointments for this business will show up here."
+            />
           ) : (
             <Table>
               <TableHeader>

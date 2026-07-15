@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardOverviewEmpty } from "@/components/dashboard/empty-states";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/shell/stat-card";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { LinkButton } from "@/components/ui/link-button";
 import {
@@ -54,47 +55,13 @@ export default async function DashboardPage() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Card tone="coral">
-              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold text-coral-foreground">
-                  Services
-                </CardTitle>
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral text-white shadow-soft">
-                  <Scissors className="h-4 w-4" />
-                </span>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-extrabold tabular-nums">{serviceCount}</p>
-              </CardContent>
-            </Card>
-            <Card tone="teal">
-              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold text-teal-foreground">
-                  Bookable staff
-                </CardTitle>
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal text-white shadow-soft">
-                  <Users className="h-4 w-4" />
-                </span>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-extrabold tabular-nums">{staffCount}</p>
-              </CardContent>
-            </Card>
-            <Card tone="violet">
-              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold text-violet-foreground">
-                  Booking link
-                </CardTitle>
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet text-white shadow-soft">
-                  <ExternalLink className="h-4 w-4" />
-                </span>
-              </CardHeader>
-              <CardContent>
-                <LinkButton variant="outline" size="sm" href={`/book/${business.slug}`} target="_blank">
-                  Open page
-                </LinkButton>
-              </CardContent>
-            </Card>
+            <StatCard title="Services" tone="coral" icon={Scissors} value={serviceCount} />
+            <StatCard title="Bookable staff" tone="teal" icon={Users} value={staffCount} />
+            <StatCard title="Booking link" tone="violet" icon={ExternalLink}>
+              <LinkButton variant="outline" size="sm" href={`/book/${business.slug}`} target="_blank">
+                Open page
+              </LinkButton>
+            </StatCard>
           </div>
 
           <Card>

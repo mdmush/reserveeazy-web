@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { clientSchema, type ClientInput } from "@/lib/validations";
 import { createClientAction } from "@/actions/dashboard";
 import type { Client } from "@/types/database";
@@ -43,7 +43,6 @@ import { UserCircle } from "lucide-react";
 function ClientFormDialog({ trigger }: { trigger: React.ReactNode }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ClientInput>({
     resolver: zodResolver(clientSchema),
@@ -51,12 +50,12 @@ function ClientFormDialog({ trigger }: { trigger: React.ReactNode }) {
   });
 
   async function onSubmit(values: ClientInput) {
-    setError(null);
     const result = await createClientAction(values);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Client added");
     setOpen(false);
     form.reset();
     router.refresh();
@@ -71,7 +70,6 @@ function ClientFormDialog({ trigger }: { trigger: React.ReactNode }) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <FormField
               control={form.control}
               name="fullName"
@@ -124,7 +122,14 @@ function ClientFormDialog({ trigger }: { trigger: React.ReactNode }) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              )}
               Add client
             </Button>
           </form>

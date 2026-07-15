@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,8 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Eye,
+  MoreHorizontal,
   RefreshCw,
   Code,
 } from "lucide-react";
@@ -43,6 +45,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Form,
   FormControl,
@@ -119,12 +129,18 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 function WidgetFormDialog({
   widget,
   trigger,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   widget?: BookingWidget;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<WidgetInput>({
@@ -152,7 +168,7 @@ function WidgetFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger>{trigger}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{widget ? "Edit widget" : "Create widget"}</DialogTitle>
@@ -233,7 +249,11 @@ function WidgetFormDialog({
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
               {widget ? "Save changes" : "Create widget"}
             </Button>
           </form>
@@ -246,20 +266,18 @@ function WidgetFormDialog({
 function EmbedCodeDialog({
   widget,
   appUrl,
+  open,
+  onOpenChange,
 }: {
   widget: BookingWidget;
   appUrl: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const code = buildEmbedCode(appUrl, widget);
 
   return (
-    <Dialog>
-      <DialogTrigger>
-        <Button variant="outline" size="sm">
-          <Code className="h-4 w-4 mr-1.5" aria-hidden />
-          Embed code
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Embed code</DialogTitle>
@@ -289,49 +307,151 @@ function EmbedCodeDialog({
   );
 }
 
-function RegenerateTokenButton({ widgetId }: { widgetId: string }) {
+function WidgetActiveSwitch({ widget }: { widget: BookingWidget }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  async function handleRegenerate() {
-    setLoading(true);
-    const result = await regenerateWidgetTokenAction(widgetId);
-    setLoading(false);
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    toast.success("Token regenerated. Update the embed code on your site.");
-    setOpen(false);
-    router.refresh();
+  function handleToggle(checked: boolean) {
+    startTransition(async () => {
+      const result = await toggleWidgetAction(widget.id, checked);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      router.refresh();
+    });
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button variant="ghost" size="icon" aria-label="Regenerate token">
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Regenerate token?</DialogTitle>
-          <DialogDescription>
-            Existing embed scripts will stop working until you update them with
-            the new token.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={handleRegenerate} disabled={loading}>
-            Regenerate
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Switch
+      checked={widget.is_active}
+      disabled={pending}
+      onCheckedChange={handleToggle}
+      aria-label={`Toggle ${widget.name}`}
+    />
+  );
+}
+
+function WidgetRowActions({
+  widget,
+  appUrl,
+}: {
+  widget: BookingWidget;
+  appUrl: string;
+}) {
+  const router = useRouter();
+  const [editOpen, setEditOpen] = useState(false);
+  const [embedOpen, setEmbedOpen] = useState(false);
+  const [regenerateOpen, setRegenerateOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  async function handleCopyToken() {
+    await navigator.clipboard.writeText(widget.public_token);
+    toast.success("Token copied");
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button variant="ghost" size="icon" aria-label="Widget actions" />
+          }
+        >
+          <MoreHorizontal className="h-4 w-4" aria-hidden />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>
+            <Pencil aria-hidden />
+            Edit widget
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleCopyToken}>
+            <Copy aria-hidden />
+            Copy token
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setEmbedOpen(true)}>
+            <Code aria-hidden />
+            Embed code
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            render={
+              <a
+                href={`/embed-demo?token=${widget.public_token}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            }
+          >
+            <ExternalLink aria-hidden />
+            View demo
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            render={
+              <a
+                href={`/embed/${widget.public_token}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            }
+          >
+            <Eye aria-hidden />
+            Preview
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setRegenerateOpen(true)}>
+            <RefreshCw aria-hidden />
+            Regenerate token
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 aria-hidden />
+            Delete widget
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <WidgetFormDialog
+        widget={widget}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+      <EmbedCodeDialog
+        widget={widget}
+        appUrl={appUrl}
+        open={embedOpen}
+        onOpenChange={setEmbedOpen}
+      />
+      <ConfirmDialog
+        open={regenerateOpen}
+        onOpenChange={setRegenerateOpen}
+        title="Regenerate token?"
+        description="Existing embed scripts will stop working until you update them with the new token."
+        confirmLabel="Regenerate"
+        destructive
+        onConfirm={async () => {
+          const result = await regenerateWidgetTokenAction(widget.id);
+          if (result.error) return { error: result.error };
+          toast.success("Token regenerated. Update the embed code on your site.");
+          router.refresh();
+        }}
+      />
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete widget?"
+        description="Existing embeds will stop working immediately."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          const result = await deleteWidgetAction(widget.id);
+          if (result.error) return { error: result.error };
+          toast.success("Widget deleted");
+          router.refresh();
+        }}
+      />
+    </>
   );
 }
 
@@ -342,27 +462,6 @@ export function WidgetsManager({
   widgets: BookingWidget[];
   appUrl: string;
 }) {
-  const router = useRouter();
-
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this widget? Existing embeds will stop working.")) return;
-    const result = await deleteWidgetAction(id);
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    router.refresh();
-  }
-
-  async function handleToggle(id: string, isActive: boolean) {
-    const result = await toggleWidgetAction(id, isActive);
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    router.refresh();
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -396,7 +495,9 @@ export function WidgetsManager({
                 <TableHead>Position</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
-                <TableHead className="min-w-[220px]" />
+                <TableHead className="w-12 text-right">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -411,23 +512,14 @@ export function WidgetsManager({
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs">{maskToken(widget.public_token)}</code>
-                      <CopyButton text={widget.public_token} label="Token" />
-                    </div>
+                    <code className="text-xs">{maskToken(widget.public_token)}</code>
                   </TableCell>
                   <TableCell>
                     {widgetPositionLabel(widget.position as WidgetPosition)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Switch
-                        checked={widget.is_active}
-                        onCheckedChange={(checked) =>
-                          handleToggle(widget.id, checked)
-                        }
-                        aria-label={`Toggle ${widget.name}`}
-                      />
+                      <WidgetActiveSwitch widget={widget} />
                       <Badge variant={widget.is_active ? "default" : "secondary"}>
                         {widget.is_active ? "Active" : "Inactive"}
                       </Badge>
@@ -436,37 +528,8 @@ export function WidgetsManager({
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(widget.created_at), "MMM d, yyyy")}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap items-center gap-1">
-                      <EmbedCodeDialog widget={widget} appUrl={appUrl} />
-                      <LinkButton
-                        variant="outline"
-                        size="sm"
-                        href={`/embed/${widget.public_token}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1.5" aria-hidden />
-                        Preview
-                      </LinkButton>
-                      <WidgetFormDialog
-                        widget={widget}
-                        trigger={
-                          <Button variant="ghost" size="icon" aria-label="Edit widget">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        }
-                      />
-                      <RegenerateTokenButton widgetId={widget.id} />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Delete widget"
-                        onClick={() => handleDelete(widget.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <TableCell className="text-right">
+                    <WidgetRowActions widget={widget} appUrl={appUrl} />
                   </TableCell>
                 </TableRow>
               ))}

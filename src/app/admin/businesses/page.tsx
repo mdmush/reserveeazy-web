@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+import { Building2 } from "lucide-react";
 import { fetchAdminBusinesses } from "@/actions/admin";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/dashboard/empty-states";
 import {
   Table,
   TableBody,
@@ -22,11 +24,15 @@ export default async function AdminBusinessesPage() {
         description={`${businesses.length} tenant${businesses.length === 1 ? "" : "s"} on the platform`}
       />
 
-      <Card className="border-border/60 shadow-sm">
-        <CardContent className="p-0">
-          {businesses.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">No businesses yet.</p>
-          ) : (
+      {businesses.length === 0 ? (
+        <EmptyState
+          icon={<Building2 className="h-10 w-10" />}
+          title="No businesses yet"
+          description="Businesses created on the platform will show up here."
+        />
+      ) : (
+        <Card>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -62,9 +68,9 @@ export default async function AdminBusinessesPage() {
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
