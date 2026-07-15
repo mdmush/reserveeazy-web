@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Calendar,
   Users,
@@ -24,6 +25,7 @@ import { MarketingHeader } from "@/components/brand/marketing-header";
 import { BrandLogo } from "@/components/brand/logo";
 import { Reveal } from "@/components/marketing/reveal";
 import { BookingPreview } from "@/components/marketing/booking-preview";
+import { AmbientVideo } from "@/components/marketing/ambient-video";
 import { cn } from "@/lib/utils";
 
 const features = [
@@ -141,8 +143,10 @@ export default function HomePage() {
       <MarketingHeader />
 
       <main className="flex-1" id="main-content">
-        {/* Hero — asymmetric split: copy + live booking preview */}
-        <section className="relative overflow-hidden">
+        {/* Hero — cinematic footage behind copy + live booking preview */}
+        <section className="relative flex min-h-[92svh] items-center overflow-hidden">
+          {/* Ambience painted behind the footage: shows under reduced motion
+              or if the generated assets ever fail to load */}
           <div className="mesh-bg absolute inset-0 pointer-events-none" />
           <div
             className="parallax-up float-slow pointer-events-none absolute -left-20 top-8 h-72 w-72 rounded-full bg-primary/20 blur-3xl"
@@ -152,8 +156,22 @@ export default function HomePage() {
             className="parallax-down float-slower pointer-events-none absolute -right-16 top-28 h-80 w-80 rounded-full bg-violet/20 blur-3xl"
             aria-hidden
           />
+          <AmbientVideo
+            src="/videos/hero.mp4"
+            poster="/images/hero-poster.webp"
+            priority
+          />
+          {/* Scrim — keeps copy readable over the footage in both themes */}
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-background via-background/75 to-background/25"
+            aria-hidden
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-background to-transparent"
+            aria-hidden
+          />
           <div className="grain-overlay absolute inset-0" aria-hidden />
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 md:py-28 lg:grid-cols-2">
+          <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-20 md:py-24 lg:grid-cols-2">
             <div className="text-center lg:text-left">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-card/80 px-4 py-1.5 text-sm font-semibold text-primary shadow-soft backdrop-blur mb-6 animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500">
                 <Sparkles className="h-4 w-4" />
@@ -190,7 +208,7 @@ export default function HomePage() {
             </div>
 
             <Reveal from="right" delay={200} className="parallax-down">
-              <div className="float-slower mx-auto w-full max-w-sm">
+              <div className="float-slower mx-auto w-full max-w-sm rounded-4xl bg-card/75 p-2.5 shadow-soft ring-1 ring-foreground/10 backdrop-blur-xl">
                 <BookingPreview />
               </div>
             </Reveal>
@@ -215,8 +233,20 @@ export default function HomePage() {
         </section>
 
         {/* Stats */}
-        <section className="py-10">
-          <div className="mx-auto max-w-6xl px-4">
+        <section className="relative overflow-hidden py-10">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-35 dark:opacity-20 [mask-image:radial-gradient(70%_100%_at_50%_50%,#000,transparent)]"
+            aria-hidden
+          >
+            <Image
+              src="/images/accent-teal-violet.webp"
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="relative mx-auto max-w-6xl px-4">
             <div className="grid grid-cols-3 gap-4 text-center divide-x divide-border">
               {stats.map((stat, i) => (
                 <Reveal key={stat.label} delay={i * 90} className="px-2">
@@ -354,6 +384,11 @@ export default function HomePage() {
         <section className="px-4 pb-24 md:pb-28">
           <Reveal from="scale">
             <div className="brand-gradient relative mx-auto max-w-6xl overflow-hidden rounded-4xl px-6 py-16 text-center text-white shadow-[0_30px_70px_-30px_var(--primary)] md:py-20">
+              <AmbientVideo
+                src="/videos/cta-gradient.mp4"
+                poster="/images/cta-poster.webp"
+              />
+              <div className="absolute inset-0 bg-black/30" aria-hidden />
               <div className="float-slow pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
               <div className="float-slower pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
               <div className="relative">
