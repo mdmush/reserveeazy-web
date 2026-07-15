@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/business";
 import { createClient } from "@/lib/supabase/server";
 import { LinkButton } from "@/components/ui/link-button";
 import { BrandLogo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 function getInitials(name: string, email: string | null) {
   const trimmed = name.trim();
@@ -60,6 +61,7 @@ export async function MarketingHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <BrandLogo size="md" />
         <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
+          <ThemeToggle />
           {authNav ? (
             <Link
               href={authNav.href}
