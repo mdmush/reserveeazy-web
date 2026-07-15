@@ -414,6 +414,20 @@
       animation-timeline: scroll(root);
     }
 
+    /* Floating header pill condenses as the page scrolls away from the top */
+    @keyframes header-condense {
+      to {
+        padding-block: 0.375rem;
+        background-color: color-mix(in oklab, var(--background) 82%, transparent);
+        box-shadow: 0 8px 30px -12px color-mix(in oklab, var(--foreground) 25%, transparent);
+      }
+    }
+    .header-pill {
+      animation: header-condense linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0px 400px;
+    }
+
     /* Hero blobs drift as the hero scrolls out of view */
     @keyframes drift-up {
       to {

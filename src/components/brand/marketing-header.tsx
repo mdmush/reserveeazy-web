@@ -57,10 +57,14 @@ export async function MarketingHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <BrandLogo size="md" />
-        <nav className="flex items-center gap-2 sm:gap-3" aria-label="Primary">
+    <header className="fixed inset-x-0 top-3 z-50 px-3 md:top-4">
+      <div className="header-pill relative mx-auto flex max-w-3xl items-center justify-between rounded-full bg-background/60 py-2 pl-4 pr-2 shadow-soft ring-1 ring-foreground/10 backdrop-blur-xl md:pl-5">
+        <span
+          className="pointer-events-none absolute inset-0 hidden rounded-full bg-gradient-to-b from-white/10 to-transparent dark:block"
+          aria-hidden
+        />
+        <BrandLogo size="sm" />
+        <nav className="relative flex items-center gap-1.5 sm:gap-2" aria-label="Primary">
           <ThemeToggle />
           {authNav ? (
             <Link
