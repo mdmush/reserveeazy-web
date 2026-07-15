@@ -8,9 +8,6 @@ import {
   ArrowRight,
   CheckCircle,
   Sparkles,
-  ListChecks,
-  Share2,
-  CalendarCheck,
   Star,
   Scissors,
   Flower2,
@@ -21,11 +18,21 @@ import {
 } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionPanel,
+} from "@/components/ui/accordion";
 import { MarketingHeader } from "@/components/brand/marketing-header";
 import { BrandLogo } from "@/components/brand/logo";
 import { Reveal } from "@/components/marketing/reveal";
 import { BookingPreview } from "@/components/marketing/booking-preview";
 import { AmbientVideo } from "@/components/marketing/ambient-video";
+import { CountUp } from "@/components/marketing/count-up";
+import { DashboardPreview } from "@/components/marketing/dashboard-preview";
+import { ScrollFilm } from "@/components/marketing/scroll-film";
 import { cn } from "@/lib/utils";
 
 const features = [
@@ -75,10 +82,17 @@ const benefits = [
   "Works for salons, spas, barbers & more",
 ];
 
-const stats = [
-  { label: "Setup time", value: "1 min", color: "text-primary" },
-  { label: "Credit card", value: "Not required", color: "text-teal" },
-  { label: "Business types", value: "Any", color: "text-violet" },
+const metrics: {
+  value: number;
+  suffix?: string;
+  decimals?: number;
+  label: string;
+  color: string;
+}[] = [
+  { value: 60, suffix: "s", label: "Average setup time", color: "text-primary" },
+  { value: 5000, suffix: "+", label: "Appointments booked", color: "text-coral" },
+  { value: 24, suffix: "/7", label: "Online booking", color: "text-teal" },
+  { value: 4.9, decimals: 1, label: "Average rating", color: "text-violet" },
 ];
 
 const segments = [
@@ -93,22 +107,80 @@ const segments = [
 
 const steps = [
   {
-    icon: ListChecks,
     title: "Add services & staff",
     description: "Set what you offer and who's available in a few minutes.",
-    tile: "bg-coral text-white",
   },
   {
-    icon: Share2,
     title: "Share your link",
     description: "Drop it in your bio, your site, or embed it as a widget.",
-    tile: "bg-teal text-white",
   },
   {
-    icon: CalendarCheck,
     title: "Get booked 24/7",
     description: "Clients pick a slot and it lands on your calendar instantly.",
-    tile: "bg-violet text-white",
+  },
+];
+
+const plans = [
+  {
+    name: "Free",
+    price: "$0",
+    period: "forever",
+    description: "Everything you need to take your first bookings.",
+    features: [
+      "1 staff member",
+      "Unlimited bookings",
+      "Your own booking page",
+      "Client profiles & notes",
+    ],
+    cta: "Start for free",
+    recommended: false,
+  },
+  {
+    name: "Pro",
+    price: "$19",
+    period: "per month",
+    description: "For growing teams that live in their calendar.",
+    features: [
+      "Unlimited staff",
+      "Embeddable booking widget",
+      "Priority support",
+      "Everything in Free",
+    ],
+    cta: "Try Pro free",
+    recommended: true,
+  },
+];
+
+const faqs = [
+  {
+    question: "Is ReserveEazy really free to start?",
+    answer:
+      "Yes. The Free plan is free forever — one staff member, unlimited bookings, and your own booking page. Upgrade to Pro only when your team grows.",
+  },
+  {
+    question: "Do I need a credit card to sign up?",
+    answer:
+      "No. You can create your account, set up services, and start taking bookings without entering any payment details.",
+  },
+  {
+    question: "What kinds of businesses does it work for?",
+    answer:
+      "Any appointment-based business: salons, spas, barbershops, nail studios, clinics, pet grooming, wellness and fitness studios, and more.",
+  },
+  {
+    question: "Can I add my whole team?",
+    answer:
+      "On Pro you can add unlimited staff members, assign services to each person, and set individual weekly availability.",
+  },
+  {
+    question: "Can I embed booking on my own website?",
+    answer:
+      "Yes. Generate an embeddable widget from your dashboard and drop a single script tag into your site — bookings land straight on your calendar.",
+  },
+  {
+    question: "Can I cancel anytime?",
+    answer:
+      "Anytime, with one click. Your data stays yours, and downgrading to Free keeps your booking page live.",
   },
 ];
 
@@ -247,18 +319,22 @@ export default function HomePage() {
             />
           </div>
           <div className="relative mx-auto max-w-6xl px-4">
-            <div className="grid grid-cols-3 gap-4 text-center divide-x divide-border">
-              {stats.map((stat, i) => (
-                <Reveal key={stat.label} delay={i * 90} className="px-2">
+            <div className="grid grid-cols-2 gap-6 text-center md:grid-cols-4 md:gap-4 md:divide-x md:divide-border">
+              {metrics.map((metric, i) => (
+                <Reveal key={metric.label} delay={i * 90} className="px-2">
                   <p
                     className={cn(
                       "text-2xl md:text-3xl font-extrabold tabular-nums",
-                      stat.color
+                      metric.color
                     )}
                   >
-                    {stat.value}
+                    <CountUp
+                      value={metric.value}
+                      suffix={metric.suffix}
+                      decimals={metric.decimals}
+                    />
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{metric.label}</p>
                 </Reveal>
               ))}
             </div>
@@ -314,40 +390,34 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="bg-muted/30 py-24 md:py-28">
+        {/* Product demo — composed dashboard mock in a browser frame */}
+        <section className="pb-24 md:pb-28">
           <div className="mx-auto max-w-6xl px-4">
             <Reveal>
               <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 text-balance">
-                Live in three steps
+                Your whole week, at a glance
               </h2>
-              <p className="text-center text-muted-foreground mb-14 max-w-xl mx-auto text-pretty">
-                No manuals, no migration. You could be taking bookings before lunch.
+              <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto text-pretty">
+                A colorful calendar your team actually enjoys opening — every
+                booking, staff member, and service in one view.
               </p>
             </Reveal>
-            <div className="relative grid gap-10 md:grid-cols-3">
-              <Reveal className="absolute inset-x-[18%] top-7 hidden md:block">
-                <div className="grow-line h-0.5 w-full rounded-full brand-gradient opacity-50" />
-              </Reveal>
-              {steps.map((step, i) => (
-                <Reveal key={step.title} delay={i * 130} className="relative text-center">
-                  <div
-                    className={cn(
-                      "mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl shadow-soft ring-4 ring-muted/30",
-                      step.tile
-                    )}
-                  >
-                    <step.icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold mb-2">{step.title}</h3>
-                  <p className="mx-auto max-w-xs text-sm text-muted-foreground text-pretty">
-                    {step.description}
-                  </p>
-                </Reveal>
-              ))}
-            </div>
+            <Reveal from="scale">
+              <div className="mx-auto max-w-4xl rounded-4xl bg-card/75 p-2.5 ring-1 ring-foreground/10 shadow-soft backdrop-blur-xl">
+                <DashboardPreview />
+              </div>
+            </Reveal>
           </div>
         </section>
+
+        {/* Scroll-scrubbed film — replaces the static how-it-works */}
+        <ScrollFilm
+          src="/videos/steps-scrub.mp4"
+          poster="/images/steps-scrub-poster.webp"
+          heading="Live in three steps"
+          subheading="No manuals, no migration. You could be taking bookings before lunch."
+          beats={steps}
+        />
 
         {/* Testimonials */}
         <section className="py-24 md:py-28">
@@ -377,6 +447,93 @@ export default function HomePage() {
                 </Reveal>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section className="bg-muted/30 py-24 md:py-28">
+          <div className="mx-auto max-w-6xl px-4">
+            <Reveal>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 text-balance">
+                Simple pricing, no surprises
+              </h2>
+              <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto text-pretty">
+                Start free, upgrade when your team grows. No setup fees, cancel
+                anytime.
+              </p>
+            </Reveal>
+            <div className="mx-auto grid max-w-3xl gap-5 md:grid-cols-2">
+              {plans.map((plan, i) => (
+                <Reveal key={plan.name} delay={i * 110} className="h-full">
+                  <Card
+                    tone={plan.recommended ? "primary" : "default"}
+                    className={cn(
+                      "relative h-full",
+                      plan.recommended && "card-glow lg:-translate-y-2"
+                    )}
+                  >
+                    <CardContent className="flex h-full flex-col pt-6">
+                      {plan.recommended && (
+                        <Badge className="absolute -top-3 right-6">
+                          Recommended
+                        </Badge>
+                      )}
+                      <h3 className="font-bold">{plan.name}</h3>
+                      <p className="mt-2">
+                        <span className="text-4xl font-extrabold tabular-nums">
+                          {plan.price}
+                        </span>
+                        <span className="ml-1.5 text-sm text-muted-foreground">
+                          {plan.period}
+                        </span>
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground text-pretty">
+                        {plan.description}
+                      </p>
+                      <ul className="mt-5 flex-1 space-y-2.5 text-sm">
+                        {plan.features.map((feature) => (
+                          <li key={feature} className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 shrink-0 text-teal" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <LinkButton
+                        className="mt-6 w-full"
+                        variant={plan.recommended ? "default" : "outline"}
+                        href="/signup"
+                      >
+                        {plan.cta}
+                      </LinkButton>
+                    </CardContent>
+                  </Card>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="py-24 md:py-28">
+          <div className="mx-auto max-w-3xl px-4">
+            <Reveal>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 text-balance">
+                Questions, answered
+              </h2>
+              <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto text-pretty">
+                Everything owners usually ask before their first booking.
+              </p>
+            </Reveal>
+            <Reveal>
+              <Accordion>
+                {faqs.map((faq) => (
+                  <AccordionItem key={faq.question}>
+                    <AccordionTrigger>{faq.question}</AccordionTrigger>
+                    <AccordionPanel>{faq.answer}</AccordionPanel>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </Reveal>
           </div>
         </section>
 
