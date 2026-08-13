@@ -24,7 +24,7 @@ export function AuthShell({ children, title, subtitle, step }: AuthShellProps) {
       <div className="relative hidden overflow-hidden lg:flex lg:w-[45%] brand-gradient flex-col justify-between p-10 text-white">
         <div className="pointer-events-none absolute -right-20 -top-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber/30 blur-3xl" />
-        <BrandLogo href="/" className="relative text-white [&_span:last-child]:text-white" />
+        <BrandLogo href="https://www.cusp.my" className="relative text-white" />
         <div className="relative space-y-6">
           <p className="text-4xl font-extrabold leading-[1.1]">
             Run your bookings
@@ -54,7 +54,7 @@ export function AuthShell({ children, title, subtitle, step }: AuthShellProps) {
         className="flex flex-1 flex-col items-center justify-center bg-background p-4 sm:p-8"
       >
         <div className="mb-8 lg:hidden">
-          <BrandLogo size="lg" />
+          <BrandLogo size="lg" href="https://www.cusp.my" />
         </div>
         {step && (
           <div className="mb-6 w-full max-w-md">

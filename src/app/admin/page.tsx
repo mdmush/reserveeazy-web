@@ -14,7 +14,7 @@ export default async function AdminOverviewPage() {
     <div className="space-y-6">
       <PageHeader
         title="Platform overview"
-        description="Cross-tenant visibility for ReserveEazy operators"
+        description="Cross-tenant visibility for CUSP operators"
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

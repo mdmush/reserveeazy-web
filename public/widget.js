@@ -15,13 +15,13 @@
 
   var token = script.getAttribute("data-token");
   if (!token) {
-    console.error("[ReserveEazy] Missing data-token on widget script");
+    console.error("[CUSP] Missing data-token on widget script");
     return;
   }
 
   var position = script.getAttribute("data-position") || "bottom-right";
   var label = script.getAttribute("data-label") || "Book now";
-  var color = script.getAttribute("data-color") || "#cb2030";
+  var color = script.getAttribute("data-color") || "#e11d34";
   var themeBackground = "#fffbfb";
   var themeBorder = "#f0e0de";
   var themeForeground = "#1a1212";
@@ -32,34 +32,34 @@
   var baseUrl = scriptSrc.replace(/\/widget\.js(\?.*)?$/, "");
   var helpUrl = script.getAttribute("data-help-url") || baseUrl;
 
-  var ROOT_ID = "reserveeazy-widget-root";
-  var STYLE_ID = "reserveeazy-widget-styles";
+  var ROOT_ID = "cusp-widget-root";
+  var STYLE_ID = "cusp-widget-styles";
   if (document.getElementById(ROOT_ID)) return;
 
   if (!document.getElementById(STYLE_ID)) {
     var styleEl = document.createElement("style");
     styleEl.id = STYLE_ID;
     styleEl.textContent =
-      "@keyframes reserveeazy-spin{to{transform:rotate(360deg)}}" +
-      ".reserveeazy-widget-spinner{width:32px;height:32px;border:3px solid " +
+      "@keyframes cusp-spin{to{transform:rotate(360deg)}}" +
+      ".cusp-widget-spinner{width:32px;height:32px;border:3px solid " +
       themeBorder +
       ";border-top-color:" +
       color +
-      ";border-radius:50%;animation:reserveeazy-spin .75s linear infinite}" +
-      ".reserveeazy-widget-help{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;min-height:28px;padding:2px 10px;border:1px solid " +
+      ";border-radius:50%;animation:cusp-spin .75s linear infinite}" +
+      ".cusp-widget-help{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;min-height:28px;padding:2px 10px;border:1px solid " +
       themeBorder +
       ";border-radius:8px;background:rgba(255,255,255,0.65);color:" +
       themeMutedForeground +
       ";font-size:13px;font-weight:500;line-height:1;text-decoration:none;cursor:pointer;font-family:system-ui,-apple-system,sans-serif;transition:background .15s ease,color .15s ease,border-color .15s ease}" +
-      ".reserveeazy-widget-help:hover{background:#fff;color:" +
+      ".cusp-widget-help:hover{background:#fff;color:" +
       themeForeground +
       ";border-color:" +
       color +
       "}" +
-      ".reserveeazy-widget-help:focus-visible{outline:2px solid " +
+      ".cusp-widget-help:focus-visible{outline:2px solid " +
       color +
       ";outline-offset:2px}" +
-      ".reserveeazy-widget-help svg{flex-shrink:0}";
+      ".cusp-widget-help svg{flex-shrink:0}";
     document.head.appendChild(styleEl);
   }
 
@@ -119,7 +119,7 @@
     dot.style.cssText =
       "flex-shrink:0;width:10px;height:10px;border-radius:50%;background:" +
       color +
-      ";box-shadow:0 2px 6px rgba(203,32,48,0.35);";
+      ";box-shadow:0 2px 6px rgba(225,29,52,0.35);";
 
     var title = document.createElement("span");
     title.style.cssText =
@@ -128,7 +128,7 @@
       ";font-weight:700;color:" +
       themeForeground +
       ";letter-spacing:-0.02em;line-height:1.2;";
-    title.innerHTML = 'Reserve<span style="color:' + color + '">Eazy</span>';
+    title.textContent = "CUSP";
 
     row.appendChild(dot);
     row.appendChild(title);
@@ -137,11 +137,11 @@
 
   function createHelpButton() {
     var help = document.createElement("a");
-    help.className = "reserveeazy-widget-help";
+    help.className = "cusp-widget-help";
     help.href = helpUrl;
     help.target = "_blank";
     help.rel = "noopener noreferrer";
-    help.setAttribute("aria-label", "Get help with ReserveEazy booking");
+    help.setAttribute("aria-label", "Get help with CUSP booking");
 
     var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     icon.setAttribute("width", "16");
@@ -179,7 +179,7 @@
 
   var root = document.createElement("div");
   root.id = ROOT_ID;
-  root.setAttribute("data-reserveeazy-widget", "true");
+  root.setAttribute("data-cusp-widget", "true");
   root.style.cssText = [
     "position:fixed",
     "z-index:2147483647",
@@ -196,10 +196,10 @@
   ].join(";");
 
   var panel = document.createElement("div");
-  panel.id = "reserveeazy-widget-panel";
+  panel.id = "cusp-widget-panel";
   panel.setAttribute("role", "dialog");
   panel.setAttribute("aria-modal", "true");
-  panel.setAttribute("aria-label", "Book an appointment with ReserveEazy");
+  panel.setAttribute("aria-label", "Book an appointment with CUSP");
   panel.setAttribute("aria-hidden", "true");
   panel.setAttribute("aria-busy", "false");
   panel.style.cssText = [
@@ -265,7 +265,7 @@
   loaderBrand.setAttribute("aria-hidden", "true");
 
   var spinner = document.createElement("div");
-  spinner.className = "reserveeazy-widget-spinner";
+  spinner.className = "cusp-widget-spinner";
   spinner.setAttribute("aria-hidden", "true");
 
   var loadingText = document.createElement("p");
@@ -291,7 +291,7 @@
   launcher.type = "button";
   launcher.setAttribute("aria-label", label);
   launcher.setAttribute("aria-expanded", "false");
-  launcher.setAttribute("aria-controls", "reserveeazy-widget-panel");
+  launcher.setAttribute("aria-controls", "cusp-widget-panel");
   launcher.textContent = label;
 
   var launcherBaseStyle = [

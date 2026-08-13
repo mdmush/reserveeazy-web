@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Prints Supabase Auth configuration checklist for ReserveEazy.
+ * Prints Supabase Auth configuration checklist for CUSP.
  * Run: npm run setup:auth
  */
 console.log(`
-ReserveEazy — Supabase Auth setup checklist
+CUSP — Supabase Auth setup checklist
 Project ref: terktsddtkazlyxgdzdz
 Dashboard: https://supabase.com/dashboard/project/terktsddtkazlyxgdzdz
 

@@ -17,9 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReserveEazy — Appointment booking made easy",
-  description:
-    "Multi-tenant booking platform for salons, spas, barbers, and appointment-based businesses.",
+  metadataBase: new URL("https://app.cusp.my"),
+  title: "CUSP",
+  description: "Sign in to manage your bookings, calendar, and clients.",
+  // App surfaces are noindex by default; /book/[slug] opts back in via generateMetadata.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({
