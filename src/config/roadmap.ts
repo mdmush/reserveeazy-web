@@ -19,9 +19,10 @@ export const PHASE_C_PRIORITY = {
     },
     {
       id: "reports_dashboard",
-      label: "Reports & insights",
+      label: "Reports & insights (advanced)",
       stack: [],
-      rationale: "Revenue, utilization, popular services",
+      rationale:
+        "Revenue, utilization, popular services. Instructor-hours and member-sessions reports shipped Aug 2026 (/dashboard/reports).",
     },
     {
       id: "embeddable_widget",

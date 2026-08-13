@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Shield,
   Code,
+  BarChart3,
 } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
 import {
@@ -26,6 +27,7 @@ const navItems: ShellNavItem[] = [
   { href: "/dashboard/staff", label: "Staff", icon: Users, color: "teal" },
   { href: "/dashboard/clients", label: "Clients", icon: UserCircle, color: "violet" },
   { href: "/dashboard/widgets", label: "Widgets", icon: Code, color: "amber" },
+  { href: "/dashboard/reports", label: "Reports", icon: BarChart3, color: "blue" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, color: "primary" },
 ];
 
