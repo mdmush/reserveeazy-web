@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_BUSINESS_HOURS } from "@/lib/constants";
 import { getPostAuthRedirectPath } from "@/lib/superuser";
 import { getAppUrl } from "@/lib/app-url";
 import {
@@ -95,50 +94,18 @@ export async function onboardingAction(data: OnboardingInput) {
     redirect("/dashboard");
   }
 
-  const { data: existingSlug } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("slug", parsed.data.slug)
-    .maybeSingle();
-
-  if (existingSlug) {
-    return { error: "This booking URL is already taken. Choose another slug." };
-  }
-
-  const { data: business, error: businessError } = await supabase
-    .from("businesses")
-    .insert({
-      name: parsed.data.name,
-      slug: parsed.data.slug,
-      business_type: parsed.data.businessType,
-      timezone: parsed.data.timezone,
-    })
-    .select("id")
-    .single();
-
-  if (businessError) return { error: businessError.message };
-
-  const { error: memberError } = await supabase.from("business_members").insert({
-    business_id: business.id,
-    user_id: user.id,
-    display_name: parsed.data.name,
-    email: user.email,
-    role: "owner",
-    is_bookable: true,
+  // Creation is atomic in the create_business RPC (SECURITY DEFINER): the
+  // membership-scoped SELECT policies mean a not-yet-member cannot check slug
+  // uniqueness or read back an inserted business row from the client.
+  const { error: createError } = await supabase.rpc("create_business", {
+    p_name: parsed.data.name,
+    p_slug: parsed.data.slug,
+    p_business_type: parsed.data.businessType,
+    p_timezone: parsed.data.timezone,
+    p_owner_name: parsed.data.name,
   });
 
-  if (memberError) return { error: memberError.message };
-
-  const { error: hoursError } = await supabase.from("business_hours").insert(
-    DEFAULT_BUSINESS_HOURS.map((hours) => ({
-      business_id: business.id,
-      day_of_week: hours.day_of_week,
-      start_time: hours.start_time,
-      end_time: hours.end_time,
-    }))
-  );
-
-  if (hoursError) return { error: hoursError.message };
+  if (createError) return { error: createError.message };
 
   redirect("/dashboard");
 }

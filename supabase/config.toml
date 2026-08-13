@@ -1,8 +1,7 @@
 # Supabase local config
 # Link remote: npx supabase link --project-ref terktsddtkazlyxgdzdz
 
-[project]
-id = "terktsddtkazlyxgdzdz"
+project_id = "terktsddtkazlyxgdzdz"
 
 [api]
 enabled = true

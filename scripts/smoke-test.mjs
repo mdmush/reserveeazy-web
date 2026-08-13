@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Automated smoke test for ReserveEazy MVP infrastructure.
+ * Automated smoke test for CUSP MVP infrastructure.
  * Run: npm run smoke-test
  */
 import { readFileSync } from "fs";
@@ -20,7 +20,9 @@ function loadEnv() {
   return env;
 }
 
-const PUBLIC_ANON_TABLES = [
+// Since the lock_public_read_policies migration, NO table is anon-readable:
+// public booking pages read through the get_public_booking_context RPC.
+const AUTH_ONLY_TABLES = [
   "profiles",
   "businesses",
   "business_members",
@@ -28,9 +30,11 @@ const PUBLIC_ANON_TABLES = [
   "staff_services",
   "staff_availability",
   "staff_time_off",
+  "business_hours",
+  "clients",
+  "appointments",
+  "booking_widgets",
 ];
-
-const AUTH_ONLY_TABLES = ["clients", "appointments", "booking_widgets"];
 
 async function main() {
   const env = loadEnv();
@@ -42,7 +46,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("ReserveEazy smoke test\n");
+  console.log("CUSP smoke test\n");
   console.log(`Supabase URL: ${url}`);
 
   const supabase = createClient(url, anonKey);
@@ -55,17 +59,7 @@ async function main() {
   }
   console.log("PASS: Supabase auth reachable");
 
-  // 2. Public table access (anon)
-  for (const table of PUBLIC_ANON_TABLES) {
-    const { error } = await supabase.from(table).select("*", { count: "exact", head: true });
-    if (error) {
-      console.error(`FAIL: Table '${table}':`, error.message || error);
-      process.exit(1);
-    }
-    console.log(`PASS: Table '${table}' accessible (anon)`);
-  }
-
-  // Auth-only tables should return empty for anon (not error)
+  // 2. Every table must return zero rows for anon (not error)
   for (const table of AUTH_ONLY_TABLES) {
     const { error, count } = await supabase.from(table).select("*", { count: "exact", head: true });
     if (error) {
@@ -73,7 +67,8 @@ async function main() {
       process.exit(1);
     }
     if (count !== 0 && count !== null) {
-      console.warn(`WARN: Table '${table}' returned ${count} rows for anon (expected 0)`);
+      console.error(`FAIL: Table '${table}' returned ${count} rows for anon (expected 0)`);
+      process.exit(1);
     }
     console.log(`PASS: Table '${table}' protected (anon sees no rows)`);
   }
@@ -100,6 +95,15 @@ async function main() {
     process.exit(1);
   }
   console.log("PASS: get_embed_widget_context RPC exists");
+
+  const { error: bookingCtxError } = await supabase.rpc("get_public_booking_context", {
+    p_slug: "__smoke_test_nonexistent__",
+  });
+  if (bookingCtxError?.message?.includes("Could not find the function")) {
+    console.error("FAIL: get_public_booking_context RPC not found");
+    process.exit(1);
+  }
+  console.log("PASS: get_public_booking_context RPC exists");
 
   // 4. App routes (requires dev server)
   const appUrl = process.env.SMOKE_TEST_APP_URL ?? "http://localhost:3000";

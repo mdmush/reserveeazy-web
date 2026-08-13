@@ -7,9 +7,11 @@ import {
   type SlotOption,
 } from "@/lib/booking/slots";
 import type {
+  AppointmentStatus,
   Business,
   BusinessHours,
   BusinessMember,
+  Service,
   StaffAvailability,
 } from "@/types/database";
 
@@ -18,52 +20,43 @@ export type StaffWithRelations = BusinessMember & {
   staff_availability: StaffAvailability[];
 };
 
-export async function loadPublicBookingByBusinessId(businessId: string) {
+type PublicAppointment = {
+  staff_member_id: string;
+  start_at: string;
+  end_at: string;
+  status: AppointmentStatus;
+};
+
+type PublicBookingContext = {
+  business: Business;
+  services: Service[];
+  staff: StaffWithRelations[];
+  business_hours: BusinessHours[];
+  time_off: { staff_member_id: string; start_at: string; end_at: string }[];
+  appointments: PublicAppointment[];
+};
+
+/**
+ * All public booking data comes through the get_public_booking_context RPC
+ * (SECURITY DEFINER): anonymous visitors have no direct table reads, and the
+ * RPC returns busy windows without client PII and staff without emails.
+ */
+export async function loadPublicBookingBySlug(slug: string) {
   const supabase = await createClient();
 
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("*")
-    .eq("id", businessId)
-    .single();
+  const { data, error } = await supabase.rpc("get_public_booking_context", {
+    p_slug: slug,
+  });
 
-  if (!business) return null;
+  if (error || !data) return null;
+  const context = data as unknown as PublicBookingContext;
 
-  const [
-    { data: services },
-    { data: staff },
-    { data: appointments },
-    { data: businessHours },
-  ] = await Promise.all([
-    supabase
-      .from("services")
-      .select("*")
-      .eq("business_id", business.id)
-      .eq("is_active", true)
-      .order("sort_order"),
-    supabase
-      .from("business_members")
-      .select("*, staff_services(service_id), staff_availability(*)")
-      .eq("business_id", business.id)
-      .eq("is_bookable", true),
-    supabase
-      .from("appointments")
-      .select("start_at, end_at, status, staff_member_id")
-      .eq("business_id", business.id)
-      .gte("start_at", new Date().toISOString())
-      .neq("status", "cancelled"),
-    supabase
-      .from("business_hours")
-      .select("*")
-      .eq("business_id", business.id),
-  ]);
-
-  const bookableStaff = (staff ?? []) as unknown as StaffWithRelations[];
-  const activeServices = services ?? [];
-  const allAppointments = appointments ?? [];
-  const hours = (businessHours ?? []) as BusinessHours[];
-  const typedBusiness = business as Business;
-  const maxDays = Math.min(typedBusiness.settings.max_advance_days, 60);
+  const bookableStaff = context.staff;
+  const activeServices = context.services;
+  const allAppointments = context.appointments;
+  const hours = context.business_hours;
+  const business = context.business;
+  const maxDays = Math.min(business.settings.max_advance_days, 60);
 
   const slotOptionsByStaffService: Record<string, SlotOption[]> = {};
   const dateRange = Array.from({ length: maxDays }, (_, i) =>
@@ -74,12 +67,9 @@ export async function loadPublicBookingByBusinessId(businessId: string) {
     const memberAppointments = allAppointments.filter(
       (a) => a.staff_member_id === member.id
     );
-
-    const { data: timeOff } = await supabase
-      .from("staff_time_off")
-      .select("start_at, end_at")
-      .eq("staff_member_id", member.id)
-      .gte("end_at", new Date().toISOString());
+    const memberTimeOff = context.time_off.filter(
+      (t) => t.staff_member_id === member.id
+    );
 
     const effectiveAvailability = intersectAvailability(
       hours,
@@ -96,12 +86,12 @@ export async function loadPublicBookingByBusinessId(businessId: string) {
       for (const date of dateRange) {
         const daySlots = generateDaySlotOptions({
           date,
-          timezone: typedBusiness.timezone,
+          timezone: business.timezone,
           serviceDurationMinutes: service.duration_minutes,
-          settings: typedBusiness.settings,
+          settings: business.settings,
           availability: effectiveAvailability,
           appointments: memberAppointments,
-          timeOff: timeOff ?? [],
+          timeOff: memberTimeOff,
         });
         allSlotOptions.push(...daySlots);
       }
@@ -112,24 +102,12 @@ export async function loadPublicBookingByBusinessId(businessId: string) {
   }
 
   return {
-    business: typedBusiness,
+    business,
     services: activeServices,
     staff: bookableStaff,
     slotOptionsByStaffService,
     appointments: allAppointments,
   };
-}
-
-export async function loadPublicBookingBySlug(slug: string) {
-  const supabase = await createClient();
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (!business) return null;
-  return loadPublicBookingByBusinessId(business.id);
 }
 
 export type EmbedWidgetContext = {

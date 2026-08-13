@@ -30,6 +30,7 @@ export default async function ClientDetailPage({
       .from("appointments")
       .select("*, services(name), business_members(display_name)")
       .eq("client_id", id)
+      .eq("business_id", membership.business_id)
       .order("start_at", { ascending: false }),
   ]);
 

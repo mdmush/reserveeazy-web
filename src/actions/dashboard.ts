@@ -17,6 +17,7 @@ import {
   type AppointmentInput,
   type SettingsInput,
 } from "@/lib/validations";
+import { PRICING_MODES } from "@/lib/pricing-mode";
 import { addMinutes, parseISO } from "date-fns";
 
 export async function createServiceAction(data: ServiceInput) {
@@ -245,7 +246,19 @@ export async function deleteBusinessHoursAction(id: string) {
 
 export async function deleteAvailabilityAction(id: string) {
   const supabase = await createClient();
-  await requireMembership();
+  const membership = await requireMembership();
+
+  const { data: row } = await supabase
+    .from("staff_availability")
+    .select("staff_member_id, business_members!inner(business_id)")
+    .eq("id", id)
+    .maybeSingle();
+
+  const belongsToBusiness =
+    row &&
+    (row.business_members as unknown as { business_id: string }).business_id ===
+      membership.business_id;
+  if (!belongsToBusiness) return { error: "Availability window not found" };
 
   const { error } = await supabase
     .from("staff_availability")
@@ -316,6 +329,7 @@ export async function createAppointmentAction(data: AppointmentInput) {
     .from("services")
     .select("duration_minutes")
     .eq("id", parsed.data.serviceId)
+    .eq("business_id", membership.business_id)
     .single();
 
   if (!service) return { error: "Service not found" };
@@ -362,6 +376,10 @@ export async function updateSettingsAction(data: SettingsInput) {
   const parsed = settingsSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
+  if (!PRICING_MODES[parsed.data.pricingMode].available) {
+    return { error: "That pricing mode is not available yet" };
+  }
+
   const membership = await requireMembership();
   const supabase = await createClient();
 
@@ -372,6 +390,7 @@ export async function updateSettingsAction(data: SettingsInput) {
       slug: parsed.data.slug,
       business_type: parsed.data.businessType,
       timezone: parsed.data.timezone,
+      pricing_mode: parsed.data.pricingMode,
       settings: {
         slot_interval_minutes: parsed.data.slotIntervalMinutes,
         min_notice_hours: parsed.data.minNoticeHours,

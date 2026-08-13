@@ -4,7 +4,7 @@ import { ShieldAlert } from "lucide-react";
 import {
   isDomainAllowed,
   loadEmbedWidgetContext,
-  loadPublicBookingByBusinessId,
+  loadPublicBookingBySlug,
 } from "@/lib/booking/load-public-booking";
 import { BookingWidget } from "@/components/booking/booking-widget";
 
@@ -44,7 +44,7 @@ export default async function EmbedBookingPage({
     );
   }
 
-  const data = await loadPublicBookingByBusinessId(context.business_id);
+  const data = await loadPublicBookingBySlug(context.business_slug);
   if (!data) notFound();
 
   const { business, services, staff, slotOptionsByStaffService, appointments } = data;
