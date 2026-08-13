@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "smoke-test": "node scripts/smoke-test.mjs",
+    "seed:uat": "node scripts/seed-two-studios.mjs",
+    "tenancy-test": "node scripts/tenancy-test.mjs",
     "setup:auth": "node scripts/setup-auth.mjs",
     "db:push": "npx supabase db push",
     "test:embed": "npx --yes serve . -p 5500"
