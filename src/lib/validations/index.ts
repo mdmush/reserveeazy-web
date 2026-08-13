@@ -86,6 +86,7 @@ export const settingsSchema = z.object({
     "other",
   ]),
   timezone: z.string(),
+  pricingMode: z.enum(["simple", "pay_per_class", "credits"]),
   slotIntervalMinutes: z.number().min(5).max(60),
   minNoticeHours: z.number().min(0),
   maxAdvanceDays: z.number().min(1),

@@ -13,6 +13,8 @@ import {
   updateSettingsAction,
 } from "@/actions/dashboard";
 import { BUSINESS_TYPES, DAYS_OF_WEEK, TIMEZONES } from "@/lib/constants";
+import { PRICING_MODES } from "@/lib/pricing-mode";
+import type { PricingMode } from "@/types/database";
 import type { Business, BusinessHours } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +61,7 @@ export function SettingsForm({
       slug: business.slug,
       businessType: business.business_type,
       timezone: business.timezone,
+      pricingMode: business.pricing_mode,
       slotIntervalMinutes: settings.slot_interval_minutes,
       minNoticeHours: settings.min_notice_hours,
       maxAdvanceDays: settings.max_advance_days,
@@ -195,6 +198,51 @@ export function SettingsForm({
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Pricing mode</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="pricingMode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>How this studio charges</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(
+                          Object.entries(PRICING_MODES) as [
+                            PricingMode,
+                            (typeof PRICING_MODES)[PricingMode],
+                          ][]
+                        ).map(([value, mode]) => (
+                          <SelectItem
+                            key={value}
+                            value={value}
+                            disabled={!mode.available && value !== field.value}
+                          >
+                            {mode.label}
+                            {!mode.available && " (coming soon)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {PRICING_MODES[field.value].description}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

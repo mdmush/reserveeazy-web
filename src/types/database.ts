@@ -20,6 +20,7 @@ export type WidgetPosition =
   | "bottom_center"
   | "top_right"
   | "top_left";
+export type PricingMode = "simple" | "pay_per_class" | "credits";
 
 export interface BusinessSettings {
   slot_interval_minutes: number;
@@ -61,6 +62,7 @@ export interface Database {
           business_type: BusinessType;
           timezone: string;
           settings: BusinessSettings;
+          pricing_mode: PricingMode;
           created_at: string;
         };
         Insert: {
@@ -70,6 +72,7 @@ export interface Database {
           business_type?: BusinessType;
           timezone?: string;
           settings?: BusinessSettings;
+          pricing_mode?: PricingMode;
           created_at?: string;
         };
         Update: {
@@ -78,6 +81,7 @@ export interface Database {
           business_type?: BusinessType;
           timezone?: string;
           settings?: BusinessSettings;
+          pricing_mode?: PricingMode;
         };
         Relationships: [];
       };
@@ -350,6 +354,22 @@ export interface Database {
           p_token: string;
         };
         Returns: Json;
+      };
+      get_public_booking_context: {
+        Args: {
+          p_slug: string;
+        };
+        Returns: Json;
+      };
+      create_business: {
+        Args: {
+          p_name: string;
+          p_slug: string;
+          p_business_type: BusinessType;
+          p_timezone: string;
+          p_owner_name: string;
+        };
+        Returns: string;
       };
     };
   };
