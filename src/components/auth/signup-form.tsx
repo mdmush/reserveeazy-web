@@ -23,13 +23,15 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export function SignupForm() {
+// Invite links pre-fill the email; signing up with it auto-links any waiting
+// staff row (see the teacher invite flow).
+export function SignupForm({ initialEmail = "" }: { initialEmail?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { fullName: "", email: "", password: "" },
+    defaultValues: { fullName: "", email: initialEmail, password: "" },
   });
 
   useFocusFirstError(form, !!error);

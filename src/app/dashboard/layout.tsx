@@ -17,6 +17,11 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
 
+  // Teachers get the /teach portal, not the admin dashboard.
+  if (membership.role === "staff") {
+    redirect("/teach");
+  }
+
   const business = membership.businesses;
   const isSuperuser = await getIsSuperuser();
 

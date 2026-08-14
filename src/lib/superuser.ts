@@ -32,8 +32,9 @@ export async function getPostAuthRedirectPath(): Promise<string> {
   const [{ data: membership }, { data: profile }] = await Promise.all([
     supabase
       .from("business_members")
-      .select("id")
+      .select("id, role")
       .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
     supabase
@@ -43,7 +44,7 @@ export async function getPostAuthRedirectPath(): Promise<string> {
       .maybeSingle(),
   ]);
 
-  if (membership) return "/dashboard";
+  if (membership) return membership.role === "staff" ? "/teach" : "/dashboard";
   if (profile?.is_superuser) return "/admin";
   return "/onboarding";
 }

@@ -11,6 +11,7 @@ export async function middleware(request: NextRequest) {
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/teach") ||
     isAdminRoute;
 
   if (isProtected && !user) {
@@ -38,8 +39,9 @@ export async function middleware(request: NextRequest) {
     const [{ data: membership }, { data: profile }] = await Promise.all([
       supabase
         .from("business_members")
-        .select("id")
+        .select("id, role")
         .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle(),
       supabase
@@ -51,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
     const url = request.nextUrl.clone();
     if (membership) {
-      url.pathname = "/dashboard";
+      url.pathname = membership.role === "staff" ? "/teach" : "/dashboard";
     } else if (profile?.is_superuser) {
       url.pathname = "/admin";
     } else {
