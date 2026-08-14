@@ -13,14 +13,18 @@ export interface MemberSessionsRow {
   clientId: string;
   fullName: string;
   sessions: number;
+  /** Mode B only: unsettled attendance dues in cents. */
+  outstandingDueCents?: number;
 }
 
 export function MemberSessions({
   rows,
   month,
+  showDues = false,
 }: {
   rows: MemberSessionsRow[];
   month: string;
+  showDues?: boolean;
 }) {
   return (
     <Card>
@@ -28,14 +32,20 @@ export function MemberSessions({
         <CardTitle>Sessions per member</CardTitle>
         <ExportCsvButton
           filename={`member-sessions-${month}.csv`}
-          headers={["Member", "Sessions"]}
-          rows={rows.map((r) => [r.fullName, r.sessions])}
+          headers={
+            showDues ? ["Member", "Sessions", "Outstanding (RM)"] : ["Member", "Sessions"]
+          }
+          rows={rows.map((r) =>
+            showDues
+              ? [r.fullName, r.sessions, ((r.outstandingDueCents ?? 0) / 100).toFixed(2)]
+              : [r.fullName, r.sessions]
+          )}
         />
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No confirmed or completed sessions this month.
+            No sessions this month.
           </p>
         ) : (
           <Table>
@@ -43,6 +53,9 @@ export function MemberSessions({
               <TableRow>
                 <TableHead>Member</TableHead>
                 <TableHead className="text-right">Sessions</TableHead>
+                {showDues && (
+                  <TableHead className="text-right">Outstanding</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -50,6 +63,13 @@ export function MemberSessions({
                 <TableRow key={row.clientId}>
                   <TableCell className="font-medium">{row.fullName}</TableCell>
                   <TableCell className="text-right">{row.sessions}</TableCell>
+                  {showDues && (
+                    <TableCell className="text-right">
+                      {row.outstandingDueCents
+                        ? `RM ${(row.outstandingDueCents / 100).toFixed(2)}`
+                        : "—"}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

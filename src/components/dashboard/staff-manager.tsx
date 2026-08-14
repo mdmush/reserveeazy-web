@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2, Clock, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, Loader2, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { staffSchema, type StaffInput } from "@/lib/validations";
 import {
@@ -15,7 +15,14 @@ import {
   deleteAvailabilityAction,
 } from "@/actions/dashboard";
 import { DAYS_OF_WEEK } from "@/lib/constants";
-import type { BusinessMember, Service, StaffAvailability } from "@/types/database";
+import type {
+  BusinessMember,
+  ClassType,
+  CommissionRate,
+  Service,
+  StaffAvailability,
+} from "@/types/database";
+import { CommissionRatesDialog } from "@/components/classes/commission-rates-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -325,9 +332,15 @@ function AvailabilityDialog({ staff }: { staff: StaffWithRelations }) {
 export function StaffManager({
   staff,
   services,
+  classTypes = [],
+  commissionRates = [],
+  showCommission = false,
 }: {
   staff: StaffWithRelations[];
   services: Service[];
+  classTypes?: ClassType[];
+  commissionRates?: CommissionRate[];
+  showCommission?: boolean;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<StaffWithRelations | null>(null);
@@ -363,11 +376,16 @@ export function StaffManager({
               <CardHeader className="flex flex-row items-start justify-between space-y-0">
                 <div>
                   <CardTitle className="text-base">{member.display_name}</CardTitle>
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="secondary">{member.role}</Badge>
                     {member.is_bookable && (
                       <Badge variant="outline">Bookable</Badge>
                     )}
+                    {member.user_id ? (
+                      <Badge variant="success">Has login</Badge>
+                    ) : member.email ? (
+                      <Badge variant="outline">Invited</Badge>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -396,7 +414,32 @@ export function StaffManager({
                 {member.email && (
                   <p className="text-sm text-muted-foreground">{member.email}</p>
                 )}
+                {member.email && !member.user_id && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      const link = `${window.location.origin}/signup?email=${encodeURIComponent(member.email ?? "")}`;
+                      navigator.clipboard.writeText(link);
+                      toast.success(
+                        "Invite link copied — send it to the teacher; signing up with this email links their account automatically"
+                      );
+                    }}
+                  >
+                    <LinkIcon className="h-4 w-4 mr-2" aria-hidden />
+                    Copy invite link
+                  </Button>
+                )}
                 <AvailabilityDialog staff={member} />
+                {showCommission && (
+                  <CommissionRatesDialog
+                    teacherId={member.id}
+                    teacherName={member.display_name}
+                    classTypes={classTypes}
+                    rates={commissionRates}
+                  />
+                )}
               </CardContent>
             </Card>
           ))}

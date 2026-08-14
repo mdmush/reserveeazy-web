@@ -11,7 +11,13 @@ import {
   Shield,
   Code,
   BarChart3,
+  Sparkles,
+  CalendarDays,
+  Package,
+  ReceiptText,
+  ScrollText,
 } from "lucide-react";
+import { getCapabilities } from "@/lib/pricing-mode";
 import { LinkButton } from "@/components/ui/link-button";
 import {
   AppSidebar,
@@ -20,16 +26,36 @@ import {
 } from "@/components/shell/app-sidebar";
 import type { Business } from "@/types/database";
 
-const navItems: ShellNavItem[] = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true, color: "primary" },
-  { href: "/dashboard/calendar", label: "Calendar", icon: Calendar, color: "blue" },
-  { href: "/dashboard/services", label: "Services", icon: Scissors, color: "coral" },
-  { href: "/dashboard/staff", label: "Staff", icon: Users, color: "teal" },
-  { href: "/dashboard/clients", label: "Clients", icon: UserCircle, color: "violet" },
-  { href: "/dashboard/widgets", label: "Widgets", icon: Code, color: "amber" },
-  { href: "/dashboard/reports", label: "Reports", icon: BarChart3, color: "blue" },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings, color: "primary" },
-];
+function buildNavItems(business: Business): ShellNavItem[] {
+  const capabilities = getCapabilities(business.pricing_mode);
+  return [
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true, color: "primary" },
+    { href: "/dashboard/calendar", label: "Calendar", icon: Calendar, color: "blue" },
+    ...(capabilities.attendance
+      ? [
+          { href: "/dashboard/classes", label: "Classes", icon: Sparkles, color: "coral" } as ShellNavItem,
+          { href: "/dashboard/schedule", label: "Schedule", icon: CalendarDays, color: "teal" } as ShellNavItem,
+        ]
+      : []),
+    ...(capabilities.credits
+      ? [
+          { href: "/dashboard/packages", label: "Packages", icon: Package, color: "violet" } as ShellNavItem,
+        ]
+      : []),
+    ...(capabilities.attendance
+      ? [
+          { href: "/dashboard/receipts", label: "Receipts", icon: ReceiptText, color: "amber" } as ShellNavItem,
+          { href: "/dashboard/waivers", label: "Waivers", icon: ScrollText, color: "violet" } as ShellNavItem,
+        ]
+      : []),
+    { href: "/dashboard/services", label: "Services", icon: Scissors, color: "coral" },
+    { href: "/dashboard/staff", label: "Staff", icon: Users, color: "teal" },
+    { href: "/dashboard/clients", label: "Clients", icon: UserCircle, color: "violet" },
+    { href: "/dashboard/widgets", label: "Widgets", icon: Code, color: "amber" },
+    { href: "/dashboard/reports", label: "Reports", icon: BarChart3, color: "blue" },
+    { href: "/dashboard/settings", label: "Settings", icon: Settings, color: "primary" },
+  ];
+}
 
 function FooterActions({
   business,
@@ -93,7 +119,7 @@ export function DashboardSidebar({
 }) {
   return (
     <AppSidebar
-      items={navItems}
+      items={buildNavItems(business)}
       navLabel="Dashboard"
       brandHref="/dashboard"
       subtitle={business.name}
@@ -113,7 +139,7 @@ export function MobileNav({
 }) {
   return (
     <AppMobileNav
-      items={navItems}
+      items={buildNavItems(business)}
       navLabel="Dashboard"
       brandHref="/dashboard"
       subtitle={business.name}

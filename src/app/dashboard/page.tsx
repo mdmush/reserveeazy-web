@@ -6,6 +6,8 @@ import { DashboardOverviewEmpty } from "@/components/dashboard/empty-states";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shell/stat-card";
+import { getCapabilities } from "@/lib/pricing-mode";
+import { PendingNotifications } from "@/components/classes/pending-notifications";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { LinkButton } from "@/components/ui/link-button";
 import {
@@ -41,7 +43,16 @@ export default async function DashboardPage() {
         .limit(5),
     ]);
 
-  const isEmpty = (serviceCount ?? 0) === 0;
+  const capabilities = getCapabilities(business.pricing_mode);
+  let classTypeCount = 0;
+  if (capabilities.attendance) {
+    const { count } = await supabase
+      .from("class_types")
+      .select("*", { count: "exact", head: true })
+      .eq("business_id", business.id);
+    classTypeCount = count ?? 0;
+  }
+  const isEmpty = (serviceCount ?? 0) === 0 && classTypeCount === 0;
 
   return (
     <div className="space-y-8">
@@ -49,6 +60,8 @@ export default async function DashboardPage() {
         title="Overview"
         description={`Welcome back to ${business.name}`}
       />
+
+      {capabilities.attendance && <PendingNotifications business={business} />}
 
       {isEmpty ? (
         <DashboardOverviewEmpty slug={business.slug} />
