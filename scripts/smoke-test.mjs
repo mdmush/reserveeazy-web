@@ -34,6 +34,19 @@ const AUTH_ONLY_TABLES = [
   "clients",
   "appointments",
   "booking_widgets",
+  "class_types",
+  "class_sessions",
+  "packages",
+  "package_instances",
+  "credit_transactions",
+  "payments",
+  "bookings",
+  "grace_passes",
+  "commission_rates",
+  "commission_events",
+  "payment_dues",
+  "waiver_versions",
+  "waiver_acceptances",
 ];
 
 async function main() {
@@ -104,6 +117,21 @@ async function main() {
     process.exit(1);
   }
   console.log("PASS: get_public_booking_context RPC exists");
+
+  // Engine RPCs must be sealed off from anonymous callers entirely.
+  const ENGINE_RPCS = [
+    ["book_class", { p_class_session_id: "00000000-0000-0000-0000-000000000000", p_client_id: "00000000-0000-0000-0000-000000000000" }],
+    ["assign_package", { p_client_id: "00000000-0000-0000-0000-000000000000", p_package_id: "00000000-0000-0000-0000-000000000000", p_amount_cents: 1, p_method: "cash" }],
+    ["mark_attendance", { p_booking_id: "00000000-0000-0000-0000-000000000000", p_present: true }],
+  ];
+  for (const [fn, args] of ENGINE_RPCS) {
+    const { error } = await supabase.rpc(fn, args);
+    if (!error) {
+      console.error(`FAIL: anon was able to call ${fn}`);
+      process.exit(1);
+    }
+    console.log(`PASS: anon cannot call ${fn}`);
+  }
 
   // 4. App routes (requires dev server)
   const appUrl = process.env.SMOKE_TEST_APP_URL ?? "http://localhost:3000";

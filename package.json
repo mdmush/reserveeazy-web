@@ -10,6 +10,8 @@
     "smoke-test": "node scripts/smoke-test.mjs",
     "seed:uat": "node scripts/seed-two-studios.mjs",
     "tenancy-test": "node scripts/tenancy-test.mjs",
+    "engine-test": "node scripts/engine-test.mjs",
+    "test:unit": "node --test src/lib/credit-engine.test.ts",
     "setup:auth": "node scripts/setup-auth.mjs",
     "db:push": "npx supabase db push",
     "test:embed": "npx --yes serve . -p 5500"

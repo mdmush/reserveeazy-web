@@ -9,6 +9,8 @@ export async function getCurrentUser() {
   return user;
 }
 
+// Deliberate assumption: one business per user. Multi-membership users get
+// their oldest membership; a tenant switcher is explicitly deferred.
 export async function getUserMembership(): Promise<
   (BusinessMember & { businesses: Business }) | null
 > {
@@ -37,4 +39,12 @@ export async function requireMembership() {
 
 export async function isAdmin(role: string) {
   return role === "owner" || role === "admin";
+}
+
+export async function requireAdminMembership() {
+  const membership = await requireMembership();
+  if (membership.role !== "owner" && membership.role !== "admin") {
+    throw new Error("Admin access required");
+  }
+  return membership;
 }

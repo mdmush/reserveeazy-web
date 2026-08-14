@@ -93,6 +93,77 @@ export const settingsSchema = z.object({
   autoConfirm: z.boolean(),
 });
 
+export const classTypeSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  color: z.string().optional(),
+  defaultDurationMinutes: z.number().min(5, "Minimum 5 minutes"),
+  defaultCapacity: z.number().min(1, "Capacity must be at least 1"),
+  creditCost: z.number().min(1, "Credit cost must be at least 1"),
+  dropInPriceCents: z.number().min(0),
+  isActive: z.boolean(),
+});
+
+export const classSessionSchema = z
+  .object({
+    classTypeId: z.string().uuid(),
+    teacherId: z.string().uuid(),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date"),
+    startTime: z.string().regex(/^\d{2}:\d{2}$/, "Pick a start time"),
+    durationMinutes: z.number().min(5, "Minimum 5 minutes"),
+    capacity: z.number().min(1, "Capacity must be at least 1"),
+    room: z.string().optional(),
+    notes: z.string().optional(),
+    repeatWeekly: z.boolean(),
+    repeatUntil: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional()
+      .or(z.literal("")),
+  })
+  .refine((data) => !data.repeatWeekly || !!data.repeatUntil, {
+    message: "Pick an end date for the weekly repeat",
+    path: ["repeatUntil"],
+  })
+  .refine(
+    (data) =>
+      !data.repeatWeekly || !data.repeatUntil || data.repeatUntil > data.date,
+    { message: "End date must be after the first session", path: ["repeatUntil"] }
+  );
+
+export const packageSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    scope: z.enum(["locked", "flexible"]),
+    classTypeId: z.string().uuid().optional().or(z.literal("")),
+    creditCount: z.number().min(1, "At least 1 credit"),
+    validityDays: z.number().min(1, "At least 1 day"),
+    expiryTrigger: z.enum(["first_attendance", "purchase"]),
+    priceCents: z.number().min(0),
+    isActive: z.boolean(),
+  })
+  .refine((data) => data.scope !== "locked" || !!data.classTypeId, {
+    message: "Locked packages need a class type",
+    path: ["classTypeId"],
+  });
+
+export const assignPackageSchema = z.object({
+  clientId: z.string().uuid(),
+  packageId: z.string().uuid(),
+  amountCents: z.number().min(1, "Payment amount is required"),
+  method: z.enum(["cash", "bank_transfer", "tng", "duitnow_qr", "card", "other"]),
+  notes: z.string().optional(),
+});
+
+export const adjustCreditsSchema = z.object({
+  packageInstanceId: z.string().uuid(),
+  amount: z
+    .number()
+    .int()
+    .refine((v) => v !== 0, "Amount cannot be zero"),
+  reason: z.string().min(3, "A reason is required"),
+});
+
 export const bookingClientSchema = z.object({
   fullName: z.string().min(2, "Name is required"),
   email: z.string().email().optional().or(z.literal("")),
@@ -123,3 +194,8 @@ export type SettingsInput = z.infer<typeof settingsSchema>;
 export type BookingClientInput = z.infer<typeof bookingClientSchema>;
 export type WidgetInput = z.infer<typeof widgetSchema>;
 export type BusinessHoursInput = z.infer<typeof businessHoursSchema>;
+export type ClassTypeInput = z.infer<typeof classTypeSchema>;
+export type ClassSessionInput = z.infer<typeof classSessionSchema>;
+export type PackageInput = z.infer<typeof packageSchema>;
+export type AssignPackageInput = z.infer<typeof assignPackageSchema>;
+export type AdjustCreditsInput = z.infer<typeof adjustCreditsSchema>;

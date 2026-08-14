@@ -79,6 +79,32 @@ async function testOwner(url, anonKey, ownStudio, otherStudio) {
     check((data ?? []).length > 0, `${ownStudio.slug}: ${table} returns own rows`);
   }
 
+  // Membership-build tables: zero foreign rows (own rows optional — studio A
+  // runs simple mode and has no class/credit data by design).
+  const engineTables = [
+    "class_types",
+    "class_sessions",
+    "packages",
+    "package_instances",
+    "credit_transactions",
+    "payments",
+    "bookings",
+    "grace_passes",
+    "commission_events",
+    "payment_dues",
+    "waiver_versions",
+    "waiver_acceptances",
+  ];
+  for (const table of engineTables) {
+    const { data, error } = await supabase.from(table).select("business_id");
+    check(!error, `${ownStudio.slug}: ${table} query succeeds`);
+    const foreign = (data ?? []).filter((r) => !ownIds.includes(r.business_id));
+    check(
+      foreign.length === 0,
+      `${ownStudio.slug}: ${table} has zero foreign-studio rows`
+    );
+  }
+
   // Staff-child tables scope transitively; verify via join shape.
   const { data: avail } = await supabase
     .from("staff_availability")

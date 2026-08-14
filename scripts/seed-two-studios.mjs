@@ -13,9 +13,11 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { createClient } from "@supabase/supabase-js";
 
+// Studio A stays in simple mode (mode-A regression); Studio B runs the credit
+// engine so tenancy + engine tests cover the membership build.
 const STUDIOS = [
-  { slug: "studio-a-uat", name: "UAT Studio A", email: "owner-a@cusp-uat.test" },
-  { slug: "studio-b-uat", name: "UAT Studio B", email: "owner-b@cusp-uat.test" },
+  { slug: "studio-a-uat", name: "UAT Studio A", email: "owner-a@cusp-uat.test", pricingMode: "simple" },
+  { slug: "studio-b-uat", name: "UAT Studio B", email: "owner-b@cusp-uat.test", pricingMode: "credits" },
 ];
 const UAT_PASSWORD = "cusp-uat-password-1";
 const SHARED_CLIENT_EMAIL = "member@cusp-uat.test";
@@ -86,7 +88,13 @@ async function seedStudio(admin, studio) {
 
   const { data: biz, error: bizError } = await admin
     .from("businesses")
-    .insert({ name: studio.name, slug: studio.slug, business_type: "other", timezone: "Asia/Kuala_Lumpur" })
+    .insert({
+      name: studio.name,
+      slug: studio.slug,
+      business_type: "other",
+      timezone: "Asia/Kuala_Lumpur",
+      pricing_mode: studio.pricingMode ?? "simple",
+    })
     .select("id")
     .single();
   if (bizError) throw new Error(`business ${studio.slug}: ${bizError.message}`);
@@ -174,8 +182,63 @@ async function seedStudio(admin, studio) {
     .insert([mk(-2, 2, "completed"), mk(-1, 4, "completed"), mk(1, 6, "confirmed")]);
   if (apptError) throw new Error(`appointments: ${apptError.message}`);
 
+  if ((studio.pricingMode ?? "simple") !== "simple") {
+    await seedClasses(admin, biz.id, owner.id, studio);
+  }
+
   console.log(`Seeded ${studio.slug} (business ${biz.id})`);
   return biz.id;
+}
+
+// Class types with DIFFERENT flexible credit costs, plus sessions this week —
+// the raw material for the engine and tenancy tests.
+async function seedClasses(admin, businessId, teacherId, studio) {
+  const { data: classTypes, error: ctError } = await admin
+    .from("class_types")
+    .insert([
+      {
+        business_id: businessId,
+        name: "Aeroyoga",
+        default_duration_minutes: 60,
+        default_capacity: 8,
+        credit_cost: 10,
+        drop_in_price_cents: 4500,
+        sort_order: 0,
+      },
+      {
+        business_id: businessId,
+        name: "Ballet Beginner",
+        default_duration_minutes: 60,
+        default_capacity: 12,
+        credit_cost: 12,
+        drop_in_price_cents: 5000,
+        sort_order: 1,
+      },
+    ])
+    .select("id, default_duration_minutes, default_capacity");
+  if (ctError) throw new Error(`class_types: ${ctError.message}`);
+
+  const now = new Date();
+  const session = (classType, dayOffset, hourUtc) => {
+    const start = new Date(Date.UTC(
+      now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + dayOffset, hourUtc, 0, 0
+    ));
+    return {
+      business_id: businessId,
+      class_type_id: classType.id,
+      teacher_id: teacherId,
+      start_at: start.toISOString(),
+      end_at: new Date(start.getTime() + classType.default_duration_minutes * 60_000).toISOString(),
+      capacity: classType.default_capacity,
+    };
+  };
+  const { error: csError } = await admin.from("class_sessions").insert([
+    session(classTypes[0], -1, 2),
+    session(classTypes[0], 1, 2),
+    session(classTypes[1], 1, 5),
+    session(classTypes[1], 3, 5),
+  ]);
+  if (csError) throw new Error(`class_sessions ${studio.slug}: ${csError.message}`);
 }
 
 async function main() {

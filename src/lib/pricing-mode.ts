@@ -16,12 +16,12 @@ export const PRICING_MODES: Record<PricingMode, PricingModeInfo> = {
   pay_per_class: {
     label: "Pay per class",
     description: "Attendance tracking, instructor commission, payment-due lines.",
-    available: false,
+    available: true,
   },
   credits: {
     label: "Credit packages",
     description: "Prepaid class credits with locked and flexible scopes.",
-    available: false,
+    available: true,
   },
 };
 
@@ -37,3 +37,7 @@ export const PRICING_MODE_CAPABILITIES: Record<
   pay_per_class: { attendance: true, credits: false, commission: true },
   credits: { attendance: true, credits: true, commission: true },
 };
+
+export function getCapabilities(mode: PricingMode) {
+  return PRICING_MODE_CAPABILITIES[mode] ?? PRICING_MODE_CAPABILITIES.simple;
+}
