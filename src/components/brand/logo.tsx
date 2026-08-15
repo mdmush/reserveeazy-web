@@ -5,68 +5,94 @@ interface BrandLogoProps {
   className?: string;
   href?: string;
   size?: "sm" | "md" | "lg";
+  /**
+   * "default": the canonical gradient lockup (lockup-light.svg), exactly as
+   * the cusp.my header renders it. "onBrand": solid-white lockup for surfaces
+   * that already sit on the brand gradient (lockup-on-red.svg) — a gradient
+   * mark loses contrast on its own gradient.
+   */
+  variant?: "default" | "onBrand";
 }
 
+// cusp.my's header renders the lockup at h-7 with a tight viewBox so the
+// height is true content height; sm/lg step around that same anchor.
 const sizes = {
-  sm: { tile: "h-5 w-5 rounded-lg", wordmark: "h-3.5" },
-  md: { tile: "h-7 w-7 rounded-xl", wordmark: "h-4" },
-  lg: { tile: "h-8 w-8 rounded-xl", wordmark: "h-5" },
+  sm: "h-6",
+  md: "h-7",
+  lg: "h-8",
 };
 
-/* Vesica-arc mark from public/brand/icon-white.svg */
-function CuspMark({ className }: { className?: string }) {
+const WORDMARK_PATH =
+  "M541 518Q541 493 528.0 473.5Q515 454 498 443Q473 460 443.0 472.0Q413 484 374 484Q323 484 287.5 462.5Q252 441 233.5 400.5Q215 360 215 303Q215 215 259.5 169.0Q304 123 383 123Q424 123 452.5 134.0Q481 145 507 159Q524 146 533.5 126.0Q543 106 543 80Q543 57 531.0 38.0Q519 19 490 6Q472 -2 439.0 -10.0Q406 -18 359 -18Q269 -18 195.5 16.0Q122 50 78.5 121.0Q35 192 35 303Q35 407 77.0 478.5Q119 550 190.5 587.5Q262 625 348 625Q409 625 452.0 611.0Q495 597 518.0 573.0Q541 549 541 518Z M933 -18Q849 -18 788.5 12.0Q728 42 695.5 96.0Q663 150 663 222V283H838V225Q838 178 864.5 150.5Q891 123 933 123Q975 123 1001.5 150.5Q1028 178 1028 225V283H1203V222Q1203 150 1170.5 96.0Q1138 42 1077.5 12.0Q1017 -18 933 -18ZM838 256H663V608Q675 610 698.5 613.5Q722 617 744 617Q794 617 816.0 600.0Q838 583 838 534ZM1203 254H1028V608Q1040 610 1063.5 613.5Q1087 617 1109 617Q1159 617 1181.0 600.0Q1203 583 1203 534Z M1546 124Q1595 124 1615.0 140.0Q1635 156 1635 176Q1635 196 1619.0 207.5Q1603 219 1574 229L1532 243Q1474 263 1429.5 285.5Q1385 308 1360.0 344.0Q1335 380 1335 438Q1335 523 1400.5 574.0Q1466 625 1584 625Q1642 625 1687.0 614.0Q1732 603 1758.0 580.5Q1784 558 1784 523Q1784 498 1772.0 479.0Q1760 460 1743 447Q1721 461 1684.0 471.5Q1647 482 1603 482Q1558 482 1537.0 469.5Q1516 457 1516 438Q1516 423 1529.5 413.5Q1543 404 1568 396L1621 379Q1716 349 1766.0 301.5Q1816 254 1816 174Q1816 89 1748.5 35.5Q1681 -18 1552 -18Q1491 -18 1442.0 -5.0Q1393 8 1364.0 34.0Q1335 60 1335 97Q1335 126 1352.0 146.5Q1369 167 1389 178Q1417 156 1457.5 140.0Q1498 124 1546 124Z M2115 325H2163Q2204 325 2229.5 345.5Q2255 366 2255 404Q2255 442 2231.5 462.5Q2208 483 2163 483Q2147 483 2136.5 482.5Q2126 482 2115 480ZM2174 188H1941V549Q1941 570 1953.0 581.5Q1965 593 1984 600Q2018 612 2065.0 617.5Q2112 623 2149 623Q2286 623 2359.5 564.0Q2433 505 2433 404Q2433 339 2401.0 290.5Q2369 242 2311.0 215.0Q2253 188 2174 188ZM1941 264H2116V1Q2105 -2 2082.0 -5.0Q2059 -8 2035 -8Q1983 -8 1962.0 10.5Q1941 29 1941 75Z";
+
+/**
+ * Inline copy of public/brand/lockup-light.svg (and lockup-on-red's white
+ * treatment), cropped to the same tight viewBox the marketing header uses.
+ */
+function CuspLockup({
+  className,
+  white,
+}: {
+  className?: string;
+  white?: boolean;
+}) {
+  const stroke = white ? "#FFFFFF" : "url(#cusp-logo-gradient)";
   return (
-    <svg viewBox="0 0 56 64" className={className} aria-hidden="true">
+    <svg
+      viewBox="10.32 14.28 157.80 35.33"
+      role="img"
+      aria-label="CUSP"
+      focusable="false"
+      className={cn("w-auto", className)}
+    >
+      {!white && (
+        <defs>
+          <linearGradient id="cusp-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#e11d34" />
+            <stop offset="45%" stopColor="#fb4d4d" />
+            <stop offset="75%" stopColor="#fb6a4a" />
+            <stop offset="100%" stopColor="#f5a524" />
+          </linearGradient>
+        </defs>
+      )}
       <path
         d="M14 46 A20 20 0 0 1 34 24 A20 20 0 0 1 14 46 Z"
         fill="none"
-        stroke="currentColor"
+        stroke={stroke}
         strokeWidth={5}
       />
       <path
         d="M14 18 A20 20 0 0 0 34 40 A20 20 0 0 0 14 18 Z"
         fill="none"
-        stroke="currentColor"
+        stroke={stroke}
         strokeWidth={5}
-        opacity={0.6}
+        opacity={0.55}
       />
-    </svg>
-  );
-}
-
-/* Outlined "CUSP" wordmark from public/brand/wordmark-only.svg */
-function CuspWordmark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 118 52" className={className} aria-hidden="true">
-      <g transform="translate(2,45.5) scale(0.0448,-0.0448)" fill="currentColor">
-        <path d="M541 518Q541 493 528.0 473.5Q515 454 498 443Q473 460 443.0 472.0Q413 484 374 484Q323 484 287.5 462.5Q252 441 233.5 400.5Q215 360 215 303Q215 215 259.5 169.0Q304 123 383 123Q424 123 452.5 134.0Q481 145 507 159Q524 146 533.5 126.0Q543 106 543 80Q543 57 531.0 38.0Q519 19 490 6Q472 -2 439.0 -10.0Q406 -18 359 -18Q269 -18 195.5 16.0Q122 50 78.5 121.0Q35 192 35 303Q35 407 77.0 478.5Q119 550 190.5 587.5Q262 625 348 625Q409 625 452.0 611.0Q495 597 518.0 573.0Q541 549 541 518Z M933 -18Q849 -18 788.5 12.0Q728 42 695.5 96.0Q663 150 663 222V283H838V225Q838 178 864.5 150.5Q891 123 933 123Q975 123 1001.5 150.5Q1028 178 1028 225V283H1203V222Q1203 150 1170.5 96.0Q1138 42 1077.5 12.0Q1017 -18 933 -18ZM838 256H663V608Q675 610 698.5 613.5Q722 617 744 617Q794 617 816.0 600.0Q838 583 838 534ZM1203 254H1028V608Q1040 610 1063.5 613.5Q1087 617 1109 617Q1159 617 1181.0 600.0Q1203 583 1203 534Z M1546 124Q1595 124 1615.0 140.0Q1635 156 1635 176Q1635 196 1619.0 207.5Q1603 219 1574 229L1532 243Q1474 263 1429.5 285.5Q1385 308 1360.0 344.0Q1335 380 1335 438Q1335 523 1400.5 574.0Q1466 625 1584 625Q1642 625 1687.0 614.0Q1732 603 1758.0 580.5Q1784 558 1784 523Q1784 498 1772.0 479.0Q1760 460 1743 447Q1721 461 1684.0 471.5Q1647 482 1603 482Q1558 482 1537.0 469.5Q1516 457 1516 438Q1516 423 1529.5 413.5Q1543 404 1568 396L1621 379Q1716 349 1766.0 301.5Q1816 254 1816 174Q1816 89 1748.5 35.5Q1681 -18 1552 -18Q1491 -18 1442.0 -5.0Q1393 8 1364.0 34.0Q1335 60 1335 97Q1335 126 1352.0 146.5Q1369 167 1389 178Q1417 156 1457.5 140.0Q1498 124 1546 124Z M2115 325H2163Q2204 325 2229.5 345.5Q2255 366 2255 404Q2255 442 2231.5 462.5Q2208 483 2163 483Q2147 483 2136.5 482.5Q2126 482 2115 480ZM2174 188H1941V549Q1941 570 1953.0 581.5Q1965 593 1984 600Q2018 612 2065.0 617.5Q2112 623 2149 623Q2286 623 2359.5 564.0Q2433 505 2433 404Q2433 339 2401.0 290.5Q2369 242 2311.0 215.0Q2253 188 2174 188ZM1941 264H2116V1Q2105 -2 2082.0 -5.0Q2059 -8 2035 -8Q1983 -8 1962.0 10.5Q1941 29 1941 75Z" />
+      <g
+        transform="translate(58,45.5) scale(0.0448,-0.0448)"
+        fill={white ? "#FFFFFF" : "url(#cusp-logo-gradient)"}
+      >
+        <path d={WORDMARK_PATH} />
       </g>
     </svg>
   );
 }
 
-export function BrandLogo({ className, href, size = "md" }: BrandLogoProps) {
-  const s = sizes[size];
-
+export function BrandLogo({
+  className,
+  href,
+  size = "md",
+  variant = "default",
+}: BrandLogoProps) {
   const content = (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      <span
-        className={cn(
-          "brand-gradient inline-flex items-center justify-center text-white shadow-[0_4px_12px_-4px_var(--primary)]",
-          s.tile
-        )}
-        aria-hidden
-      >
-        <CuspMark className="h-[68%] w-auto" />
-      </span>
-      <CuspWordmark className={cn("w-auto", s.wordmark)} />
-      <span className="sr-only">CUSP</span>
+    <span className={cn("inline-flex items-center", className)}>
+      <CuspLockup className={sizes[size]} white={variant === "onBrand"} />
     </span>
   );
 
   if (href) {
     const linkClassName =
-      "rounded-lg hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+      "inline-flex rounded-lg hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
     if (href.startsWith("http")) {
       return (
         <a href={href} className={linkClassName}>
