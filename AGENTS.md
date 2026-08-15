@@ -4,6 +4,14 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# Git rules
+
+- **Never commit or push on your own.** Only commit/push when explicitly asked
+  in the current request — completing a task does not imply committing it.
+  Pushing to `main` triggers a production deploy.
+- **Never add co-author lines to commits** (no `Co-Authored-By:` or similar
+  trailers). Plain commit messages only.
+
 # Credit-engine invariants (do not break these)
 
 The membership build (classes, credits, attendance, commission) lives behind
