@@ -124,6 +124,11 @@ async function main() {
     ["assign_package", { p_client_id: "00000000-0000-0000-0000-000000000000", p_package_id: "00000000-0000-0000-0000-000000000000", p_amount_cents: 1, p_method: "cash" }],
     ["mark_attendance", { p_booking_id: "00000000-0000-0000-0000-000000000000", p_present: true }],
   ];
+  ENGINE_RPCS.push(
+    ["join_studio", { p_slug: "x", p_full_name: "x" }],
+    ["get_member_schedule", { p_business_id: "00000000-0000-0000-0000-000000000000", p_from: new Date().toISOString(), p_to: new Date().toISOString() }],
+    ["get_member_bookings", { p_business_id: "00000000-0000-0000-0000-000000000000" }]
+  );
   for (const [fn, args] of ENGINE_RPCS) {
     const { error } = await supabase.rpc(fn, args);
     if (!error) {
@@ -136,7 +141,7 @@ async function main() {
   // 4. App routes (requires dev server)
   const appUrl = process.env.SMOKE_TEST_APP_URL ?? "http://localhost:3000";
   try {
-    const routes = ["/", "/login", "/signup"];
+    const routes = ["/", "/login", "/signup", "/join/studio-b-uat"];
     for (const route of routes) {
       const res = await fetch(`${appUrl}${route}`);
       if (!res.ok) {

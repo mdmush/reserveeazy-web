@@ -40,6 +40,9 @@ mush-brief-cusp-rebrand-2026-08-12.md
 | `/dashboard/waivers` | capability: attendance | versioned waiver editor/publish |
 | `/dashboard/reports` | all | mode-aware monthly reports + CSV |
 | `/teach[,sessionId]` | role: staff | teacher portal — own sessions, attendance-only roster |
+| `/join/[slug]` (+ `/complete`) | public → authed | member registration: magic-link email form, then profile completion via `join_studio` RPC |
+| `/portal` | linked member | studio picker (redirects when only one) |
+| `/portal/[slug]{,/schedule,/bookings,/membership,/waiver}` | linked member | member portal: home + waiver banner, bookable schedule, booking history, packages/ledger/passes/receipts, waiver signing |
 | `/admin/**` | superuser | cross-tenant platform views |
 | `robots.ts`, `icon.svg`, `apple-icon.png` | — | SEO + favicons (noindex default; `/book` opts in) |
 
@@ -60,6 +63,7 @@ zod-parse → `requireMembership()`/`requireAdminMembership()` → query scoped 
 | `classes.ts` | class types CRUD, session create (weekly recurrence = atomic batch insert), session cancel (single/future) |
 | `engine.ts` | thin wrappers over every engine RPC: book/cancel, attendance ± revert, packages/sell/adjust, passes, waitlist offer/claim/release, dues, commission rates |
 | `waivers.ts` | waiver versions (draft/publish), acceptance (→ RPC), guardian links |
+| `member.ts` | portal actions: magic/join links (`signInWithOtp`), `join_studio`, member book/cancel/claim/waiver (RPCs enforce; actions add UX guards + friendly errors) |
 | `widgets.ts`, `admin.ts` | embed widgets; superuser cross-tenant reads |
 
 `markAttendanceAction` is the one non-admin action (teachers may call it — the
@@ -78,7 +82,8 @@ RPC enforces own-session-only).
 | `booking/` | mode-A slot math (`slots.ts`) + public-page loader over the RPC |
 | `supabase/` | server/client/middleware Supabase factories (`@supabase/ssr`) |
 | `validations/` | all zod schemas + inferred input types |
-| `superuser.ts` | superuser checks + post-auth routing (staff → `/teach`) |
+| `superuser.ts` | superuser checks + post-auth routing (staff → `/teach`, linked member → `/portal`; branch order mirrored in middleware.ts) |
+| `member.ts` | `getLinkedClients`, `getMemberContext(slug)`, `requireMemberClient`, `getActingClients` (self + dependents) |
 | `csv.ts`, `format.ts`, `constants.ts`, `calendar/`, `app-url.ts`, `utils.ts` | small utilities |
 
 `src/types/database.ts` — hand-written Supabase types: every table, view, and
@@ -97,7 +102,8 @@ missing one collapses all client types to `never`).
 | `packages/` | packages manager + sell dialog, member panel (balances/ledger/passes/waiver/family tabs), printable receipt bits |
 | `waivers/` | version list/editor/publish |
 | `reports/` | instructor-hours, commission report, member sessions, CSV export button |
-| `booking/`, `calendar/`, `admin/`, `auth/`, `theme/` | public booking widget UI, calendar view, superuser pages, auth forms, theming |
+| `portal/` | member portal: shell + tabs, join/profile forms, bookable schedule, bookings list, membership view, waiver signing, studio picker |
+| `booking/`, `calendar/`, `admin/`, `auth/`, `theme/` | public booking widget UI, calendar view, superuser pages, auth forms (incl. magic-link form), theming |
 | `ui/` | shadcn-style primitives (button, dialog, table, tabs, select, …) |
 
 Supabase joins aren't typed (hand-written types have empty `Relationships`) —
@@ -132,6 +138,11 @@ Ordered history; create with `npx supabase migration new <name>`, apply with
    (+ `fix_invite_link_guard`), `grace_passes`, `waivers_family`,
    `waitlist_admin_flow`. Later migrations redefine earlier RPCs
    (`grace_passes` redefines `book_class`) — always read the newest definition.
+4. **2026-08-19 (member portal)** — `member_identity` (clients.user_id, member
+   RLS tier, `join_studio`), `member_engine_access` (`_can_act_for_client`
+   guards + the mode-B null-funding fix; redefines book/cancel/claim/waiver
+   RPCs again), `member_schedule_rpcs` (`get_member_schedule`,
+   `get_member_bookings`).
 
 The remote migration ledger was repaired on 2026-08-14; `db push` works
 normally. Never edit an applied migration — add a new one.

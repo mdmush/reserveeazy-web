@@ -138,15 +138,52 @@ the SQL wins.**
 
 ## Auth, roles, and surfaces
 
-Supabase email+password; SSR cookie sessions (`@supabase/ssr`);
-`middleware.ts` guards routes (UX only — RLS/RPCs are the security).
+Supabase email+password for staff, **email magic links for members** (the
+`token_hash`+`verifyOtp` form in `/auth/confirm` — survives opening the link
+in a different browser; the confirm route also still handles PKCE `code` for
+password signups, and honors a same-origin-sanitized `next` param). SSR
+cookie sessions (`@supabase/ssr`); `middleware.ts` guards routes (UX only —
+RLS/RPCs are the security).
 
 | Role | Where it lives | Surface |
 |---|---|---|
 | owner / admin | `business_members.role` | `/dashboard/**` (full studio admin) |
 | staff (= teacher) | `business_members.role` | `/teach` only — own sessions, roster, attendance |
 | superuser | `profiles.is_superuser` | `/admin` (cross-tenant, read-heavy) |
-| member/customer | `clients` rows — **no login** | booked by admin / public page |
+| member | `clients.user_id` link | `/portal/**` — self-serve booking, balances, waivers |
+| walk-in customer | `clients` rows, no link | booked by admin / public `/book` page |
+
+## The member tier (portal)
+
+A member is a `clients` row with `user_id` set. Since the same email can be a
+client at several studios, the portal is **slug-scoped** (`/portal/[slug]`,
+picker when linked to more than one). Registration is an open per-studio join
+link — `/join/[slug]` sends a magic link; the `join_studio` RPC then **claims**
+the studio's existing client record by email (never overwriting the front-desk
+name) or creates a new one; idempotent per (business, user); membership-mode
+studios only. Dependents have no logins — guardians act for them via
+`clients.guardian_client_id`.
+
+Isolation follows the same layered model:
+
+- **RLS**: `get_member_client_ids()` (own + dependents) and
+  `get_member_business_ids()` power additive SELECT-only policies on the
+  member's own rows (instances, ledger, payments, dues, passes, bookings,
+  acceptances) plus studio catalog (class_types, packages, published
+  waivers). **No member policies on `class_sessions`/`business_members`** —
+  teacher emails and other members' bookings would leak; schedule and booking
+  lists flow through `get_member_schedule` / `get_member_bookings`
+  (SECURITY DEFINER, membership-checked, display names + seat counts only).
+- **Engine guards**: `_can_act_for_client()` (admin OR self OR guardian)
+  gates `book_class`, `cancel_booking`, `claim_waitlist_offer`, and
+  `record_waiver_acceptance`. Force-refunds and every other admin RPC stay
+  admin-only. Cross-member funding stays impossible (`_fund_booking` filters
+  by client). Mode-B (`pay_per_class`) bookings carry **null funding** — dues
+  are created at attendance (this also fixed a latent bug where mode-B
+  studios couldn't book at all).
+- Claim caveat: a client whose front-desk email differs from the one they
+  sign up with won't be matched — `join_studio` creates a second record, and
+  merging is a front-desk problem (no tooling yet).
 
 Teacher invites: admin sets an email on the staff row and shares
 `/signup?email=…`; the `handle_new_user()` trigger links the new auth user to

@@ -169,6 +169,72 @@ async function main() {
     check(!error && (count === 0 || count === null), `anon direct read of ${table} is empty`);
   }
 
+  // ---- member (portal) isolation ----------------------------------------
+  const member = createClient(url, anonKey, { auth: { persistSession: false } });
+  const { error: memberSignIn } = await member.auth.signInWithPassword({
+    email: "portal-member@cusp-uat.test",
+    password: UAT_PASSWORD,
+  });
+  if (memberSignIn) {
+    console.error(`FAIL: portal member sign-in: ${memberSignIn.message}`);
+    failures++;
+  } else {
+    const { data: memberBiz } = await member.from("businesses").select("id, slug");
+    check(
+      (memberBiz ?? []).length === 1 && memberBiz[0].slug === "studio-b-uat",
+      "portal member sees only their own studio"
+    );
+    const bizBId = memberBiz?.[0]?.id;
+
+    const { data: memberClients } = await member.from("clients").select("id, email");
+    check(
+      (memberClients ?? []).length === 1 &&
+        memberClients[0].email === "portal-member@cusp-uat.test",
+      "portal member sees only their own client record (no other members)"
+    );
+
+    for (const table of ["class_sessions", "business_members"]) {
+      const { data } = await member.from(table).select("*");
+      check(
+        (data ?? []).length === 0,
+        `portal member has no direct read on ${table}`
+      );
+    }
+
+    const { data: foreignSched, error: foreignSchedErr } = await member.rpc(
+      "get_member_schedule",
+      {
+        p_business_id: "00000000-0000-0000-0000-000000000000",
+        p_from: new Date().toISOString(),
+        p_to: new Date(Date.now() + 86400000).toISOString(),
+      }
+    );
+    check(
+      !!foreignSchedErr && !foreignSched,
+      "get_member_schedule rejects studios the member doesn't belong to"
+    );
+
+    const { data: ownSched, error: ownSchedErr } = await member.rpc(
+      "get_member_schedule",
+      {
+        p_business_id: bizBId,
+        p_from: new Date().toISOString(),
+        p_to: new Date(Date.now() + 7 * 86400000).toISOString(),
+      }
+    );
+    check(
+      !ownSchedErr && Array.isArray(ownSched),
+      "portal member reads their studio's schedule via the RPC",
+      ownSchedErr?.message
+    );
+    const leakyKeys = (ownSched ?? []).flatMap((s) =>
+      Object.keys(s).filter((k) => k === "teacher_email" || k === "user_id")
+    );
+    check(leakyKeys.length === 0, "schedule RPC exposes no emails or user ids");
+
+    await member.auth.signOut();
+  }
+
   if (failures > 0) {
     console.error(`\n${failures} tenancy check(s) FAILED`);
     process.exit(1);

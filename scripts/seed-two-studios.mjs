@@ -75,6 +75,8 @@ async function cleanup(admin) {
       console.log(`Deleted user ${studio.email}`);
     }
   }
+  const portalUser = await findUserByEmail(admin, "portal-member@cusp-uat.test");
+  if (portalUser) await admin.auth.admin.deleteUser(portalUser.id);
 }
 
 async function seedStudio(admin, studio) {
@@ -184,10 +186,34 @@ async function seedStudio(admin, studio) {
 
   if ((studio.pricingMode ?? "simple") !== "simple") {
     await seedClasses(admin, biz.id, owner.id, studio);
+    await seedPortalMember(admin, biz.id, studio);
   }
 
   console.log(`Seeded ${studio.slug} (business ${biz.id})`);
   return biz.id;
+}
+
+// A linked portal member for manual UAT and the tenancy suite.
+async function seedPortalMember(admin, businessId, studio) {
+  const email = "portal-member@cusp-uat.test";
+  const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  let user = users.users.find((u) => u.email === email);
+  if (!user) {
+    const { data: created, error } = await admin.auth.admin.createUser({
+      email,
+      password: UAT_PASSWORD,
+      email_confirm: true,
+    });
+    if (error) throw new Error(`portal member user: ${error.message}`);
+    user = created.user;
+  }
+  const { error } = await admin.from("clients").insert({
+    business_id: businessId,
+    full_name: "Portal Member",
+    email,
+    user_id: user.id,
+  });
+  if (error) throw new Error(`portal member client ${studio.slug}: ${error.message}`);
 }
 
 // Class types with DIFFERENT flexible credit costs, plus sessions this week —

@@ -182,6 +182,36 @@ async function main() {
   const tinyClass = await mkSession(ballet.id, teacher2.id, 40, 1, 1); // capacity 1
   const overlapClass = await mkSession(ballet.id, teacher2.id, 30, 1, 12); // same time as aeroLater
 
+  // ---- member auth users (portal) ---------------------------------------
+  // Simulates completed join flows: client1 belongs to member1, client2 to
+  // member2. Service-role links stand in for join_studio (tested separately).
+  const memberEmails = ["portal-m1@cusp-uat.test", "portal-m2@cusp-uat.test"];
+  const { data: allUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  for (const u of allUsers.users.filter((u) => memberEmails.includes(u.email))) {
+    await admin.auth.admin.deleteUser(u.id);
+  }
+  const memberIds = [];
+  for (const memberEmail of memberEmails) {
+    const { data: created, error } = await admin.auth.admin.createUser({
+      email: memberEmail,
+      password: "cusp-uat-password-1",
+      email_confirm: true,
+    });
+    if (error) throw new Error(`member user: ${error.message}`);
+    memberIds.push(created.user.id);
+  }
+  await admin.from("clients").update({ user_id: memberIds[0] }).eq("id", client1.id);
+  await admin.from("clients").update({ user_id: memberIds[1] }).eq("id", client2.id);
+  const member1 = createClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    { auth: { persistSession: false } }
+  );
+  await member1.auth.signInWithPassword({
+    email: memberEmails[0],
+    password: "cusp-uat-password-1",
+  });
+
   // ---- sign in as owner B ----------------------------------------------
   const { error: signInError } = await owner.auth.signInWithPassword({
     email: "owner-b@cusp-uat.test",
@@ -804,6 +834,135 @@ async function main() {
     "an expired claim window cannot be claimed"
   );
 
+  // ---- member portal: self-service through the same engine ----------------
+  // client1 (member1) accepted waiver v2 above; book with own credits.
+  const memberSession = await mkSession(ballet.id, teacher.id, 70, 1, 8);
+  const { data: memberBook, error: memberBookErr } = await member1.rpc(
+    "book_class",
+    { p_class_session_id: memberSession, p_client_id: client1.id }
+  );
+  check(
+    !memberBookErr && memberBook.status === "booked" && memberBook.credit_cost === ballet.credit_cost,
+    "member books their own class with their own credits",
+    memberBookErr?.message
+  );
+
+  const { error: strangerErr } = await member1.rpc("book_class", {
+    p_class_session_id: memberSession,
+    p_client_id: client2.id,
+  });
+  check(
+    strangerErr?.message?.includes("Not allowed"),
+    "member cannot book for another member"
+  );
+
+  const { error: memberForceErr } = await member1.rpc("cancel_booking", {
+    p_booking_id: memberBook.booking_id,
+    p_force_refund: true,
+  });
+  check(
+    memberForceErr?.message?.includes("Admin access required"),
+    "member cannot use the force-refund override"
+  );
+  const { data: memberCancel } = await member1.rpc("cancel_booking", {
+    p_booking_id: memberBook.booking_id,
+  });
+  check(
+    memberCancel?.outcome === "refunded",
+    "member early-cancels their own booking with refund-to-source"
+  );
+
+  // Guardian: member1's client is the dependent's guardian.
+  const { error: depWaiverErr } = await member1.rpc("record_waiver_acceptance", {
+    p_client_id: dependent.id,
+    p_signature_name: "Guardian via portal",
+    p_accepted_by_client_id: client1.id,
+  });
+  check(
+    !depWaiverErr || depWaiverErr.message.includes("already accepted"),
+    "guardian signs the waiver for their dependent from the portal",
+    depWaiverErr?.message
+  );
+
+  // Member claims their own waitlist offer.
+  await owner.rpc("record_waiver_acceptance", {
+    p_client_id: client2.id,
+    p_signature_name: "Engine Test Member 2 (v2)",
+  });
+  const claimSession = await mkSession(ballet.id, teacher2.id, 72, 1, 1);
+  const { data: seatB, error: seatBErr } = await owner.rpc("book_class", {
+    p_class_session_id: claimSession,
+    p_client_id: client2.id,
+  });
+  if (seatBErr) throw new Error(`claim setup: ${seatBErr.message}`);
+  const { data: memberWait } = await member1.rpc("book_class", {
+    p_class_session_id: claimSession,
+    p_client_id: client1.id,
+  });
+  check(
+    memberWait?.status === "waitlisted",
+    "member joins a full class's waitlist themselves"
+  );
+  await owner.rpc("cancel_booking", { p_booking_id: seatB.booking_id });
+  const { data: memberClaim, error: memberClaimErr } = await member1.rpc(
+    "claim_waitlist_offer",
+    { p_booking_id: memberWait.booking_id }
+  );
+  check(
+    !memberClaimErr && memberClaim.status === "booked",
+    "member claims their own offered spot",
+    memberClaimErr?.message
+  );
+
+  // Mode B: booking carries null funding; attendance creates the due.
+  await admin.from("businesses").update({ pricing_mode: "pay_per_class" }).eq("id", bizId);
+  const modeBSession = await mkSession(aero.id, teacher2.id, 5 / 60, 1, 8);
+  const { data: modeBBook, error: modeBErr } = await member1.rpc("book_class", {
+    p_class_session_id: modeBSession,
+    p_client_id: client1.id,
+  });
+  check(
+    !modeBErr && modeBBook.status === "booked" && modeBBook.credit_cost === null,
+    "pay-per-class booking succeeds without credit packages (mode-B fix)",
+    modeBErr?.message
+  );
+  const { data: modeBAttend } = await owner.rpc("mark_attendance", {
+    p_booking_id: modeBBook.booking_id,
+    p_present: true,
+  });
+  const { data: modeBDue } = await admin
+    .from("payment_dues")
+    .select("status, amount_cents")
+    .eq("booking_id", modeBBook.booking_id)
+    .single();
+  check(
+    modeBAttend?.status === "attended" && modeBDue?.status === "due",
+    "mode-B attendance on a member booking creates the payment due"
+  );
+  await admin.from("businesses").update({ pricing_mode: "credits" }).eq("id", bizId);
+
+  // Admin-only RPCs stay sealed to members.
+  const { error: mAssignErr } = await member1.rpc("assign_package", {
+    p_client_id: client1.id,
+    p_package_id: flexPkg.id,
+    p_amount_cents: 100,
+    p_method: "cash",
+  });
+  const { error: mAdjustErr } = await member1.rpc("adjust_credits", {
+    p_package_instance_id: flexInstance,
+    p_amount: 99,
+    p_reason: "nope",
+  });
+  const { error: mAttendErr } = await member1.rpc("mark_attendance", {
+    p_booking_id: memberClaim.booking_id,
+    p_present: true,
+  });
+  check(
+    !!mAssignErr && !!mAdjustErr && !!mAttendErr,
+    "members cannot assign packages, adjust credits, or mark attendance"
+  );
+  await member1.auth.signOut();
+
   // ---- cross-tenant admin rejection --------------------------------------
   await owner.auth.signOut();
   await owner.auth.signInWithPassword({
@@ -815,8 +974,9 @@ async function main() {
     p_client_id: client1.id,
   });
   check(
-    crossErr?.message?.includes("Admin access required"),
-    "studio A's owner cannot book on studio B's sessions"
+    crossErr?.message?.includes("Not allowed"),
+    "studio A's owner cannot book on studio B's sessions",
+    crossErr?.message
   );
   const { error: crossAttendErr } = await owner.rpc("mark_attendance", {
     p_booking_id: bookNow.booking_id,
