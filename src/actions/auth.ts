@@ -13,7 +13,7 @@ import {
   type OnboardingInput,
 } from "@/lib/validations";
 
-export async function loginAction(data: LoginInput) {
+export async function loginAction(data: LoginInput, redirectTo?: string) {
   const parsed = loginSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -33,6 +33,10 @@ export async function loginAction(data: LoginInput) {
 
   if (!user) return { error: "Authentication failed" };
 
+  // Deep links (?redirect=) survive login; internal paths only.
+  if (redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
+    redirect(redirectTo);
+  }
   redirect(await getPostAuthRedirectPath());
 }
 

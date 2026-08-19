@@ -131,6 +131,20 @@ export const classSessionSchema = z
     { message: "End date must be after the first session", path: ["repeatUntil"] }
   );
 
+export const magicLinkSchema = z.object({
+  email: z.string().email("Enter a valid email"),
+});
+
+export const joinRequestSchema = z.object({
+  fullName: z.string().min(2, "Your name is required"),
+  email: z.string().email("Enter a valid email"),
+});
+
+export const completeProfileSchema = z.object({
+  fullName: z.string().min(2, "Your name is required"),
+  phone: z.string().optional(),
+});
+
 export const packageSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
@@ -199,3 +213,6 @@ export type ClassSessionInput = z.infer<typeof classSessionSchema>;
 export type PackageInput = z.infer<typeof packageSchema>;
 export type AssignPackageInput = z.infer<typeof assignPackageSchema>;
 export type AdjustCreditsInput = z.infer<typeof adjustCreditsSchema>;
+export type MagicLinkInput = z.infer<typeof magicLinkSchema>;
+export type JoinRequestInput = z.infer<typeof joinRequestSchema>;
+export type CompleteProfileInput = z.infer<typeof completeProfileSchema>;

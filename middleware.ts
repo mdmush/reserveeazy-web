@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/onboarding") ||
     pathname.startsWith("/teach") ||
+    pathname.startsWith("/portal") ||
     isAdminRoute;
 
   if (isProtected && !user) {
@@ -36,26 +37,37 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isAuthRoute && user) {
-    const [{ data: membership }, { data: profile }] = await Promise.all([
-      supabase
-        .from("business_members")
-        .select("id, role")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("is_superuser")
-        .eq("id", user.id)
-        .maybeSingle(),
-    ]);
+    // Branch order mirrors getPostAuthRedirectPath in src/lib/superuser.ts —
+    // keep both in sync.
+    const [{ data: membership }, { data: profile }, { data: linkedClient }] =
+      await Promise.all([
+        supabase
+          .from("business_members")
+          .select("id, role")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("is_superuser")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("clients")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
     const url = request.nextUrl.clone();
     if (membership) {
       url.pathname = membership.role === "staff" ? "/teach" : "/dashboard";
     } else if (profile?.is_superuser) {
       url.pathname = "/admin";
+    } else if (linkedClient) {
+      url.pathname = "/portal";
     } else {
       url.pathname = "/onboarding";
     }

@@ -266,6 +266,7 @@ export interface Database {
           health_declaration: string | null;
           health_flags: Json;
           guardian_client_id: string | null;
+          user_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -281,6 +282,7 @@ export interface Database {
           health_declaration?: string | null;
           health_flags?: Json;
           guardian_client_id?: string | null;
+          user_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -294,6 +296,7 @@ export interface Database {
           health_declaration?: string | null;
           health_flags?: Json;
           guardian_client_id?: string | null;
+          user_id?: string | null;
         };
         Relationships: [];
       };
@@ -827,6 +830,28 @@ export interface Database {
       release_waitlist_offer: {
         Args: { p_booking_id: string };
         Returns: Json;
+      };
+      get_member_schedule: {
+        Args: {
+          p_business_id: string;
+          p_from: string;
+          p_to: string;
+        };
+        Returns: Json;
+      };
+      get_member_bookings: {
+        Args: {
+          p_business_id: string;
+        };
+        Returns: Json;
+      };
+      join_studio: {
+        Args: {
+          p_slug: string;
+          p_full_name: string;
+          p_phone?: string | null;
+        };
+        Returns: string;
       };
       record_waiver_acceptance: {
         Args: {

@@ -29,22 +29,32 @@ export async function getPostAuthRedirectPath(): Promise<string> {
 
   const supabase = await createClient();
 
-  const [{ data: membership }, { data: profile }] = await Promise.all([
-    supabase
-      .from("business_members")
-      .select("id, role")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("profiles")
-      .select("is_superuser")
-      .eq("id", user.id)
-      .maybeSingle(),
-  ]);
+  // Branch order mirrors the auth-route logic in middleware.ts — keep both
+  // in sync.
+  const [{ data: membership }, { data: profile }, { data: linkedClient }] =
+    await Promise.all([
+      supabase
+        .from("business_members")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("is_superuser")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("clients")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
   if (membership) return membership.role === "staff" ? "/teach" : "/dashboard";
   if (profile?.is_superuser) return "/admin";
+  if (linkedClient) return "/portal";
   return "/onboarding";
 }
