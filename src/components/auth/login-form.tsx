@@ -22,10 +22,12 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MagicLinkForm } from "@/components/auth/magic-link-form";
 
-export function LoginForm() {
+export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [useMagicLink, setUseMagicLink] = useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -37,11 +39,30 @@ export function LoginForm() {
   async function onSubmit(values: LoginInput) {
     setLoading(true);
     setError(null);
-    const result = await loginAction(values);
+    const result = await loginAction(values, redirectTo);
     if (result?.error) {
       setError(result.error);
       setLoading(false);
     }
+  }
+
+  if (useMagicLink) {
+    return (
+      <Card className="w-full card-glow">
+        <CardContent className="pt-6 space-y-4">
+          <MagicLinkForm />
+          <p className="text-center text-sm text-muted-foreground">
+            <button
+              type="button"
+              className="font-medium text-primary underline underline-offset-4"
+              onClick={() => setUseMagicLink(false)}
+            >
+              Sign in with a password instead
+            </button>
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -91,6 +112,15 @@ export function LoginForm() {
           </form>
         </Form>
         <p className="mt-4 text-center text-sm text-muted-foreground">
+          <button
+            type="button"
+            className="font-medium text-primary underline underline-offset-4"
+            onClick={() => setUseMagicLink(true)}
+          >
+            Email me a sign-in link instead
+          </button>
+        </p>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="font-medium text-primary underline underline-offset-4">
             Sign up
