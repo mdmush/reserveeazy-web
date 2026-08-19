@@ -1,5 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const benefits = [
   "Online booking in minutes",
@@ -51,6 +52,9 @@ export function AuthShell({ children, title, subtitle, step }: AuthShellProps) {
           </ul>
         </div>
         <p className="relative text-sm text-white/70">Trusted by appointment-based businesses</p>
+        <div className="absolute bottom-6 right-6 [&_button]:text-white [&_button]:hover:bg-white/15">
+          <ThemeToggle />
+        </div>
       </div>
 
       <main
