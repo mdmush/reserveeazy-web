@@ -32,12 +32,12 @@
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px 0;">
                 <tr>
                   <td style="background-color:#e11d34;background:linear-gradient(135deg,#e11d34 0%,#fb4d4d 45%,#fb6a4a 75%,#f5a524 100%);border-radius:9999px;">
-                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.2px;">Sign In</a>
+                    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next={{ .RedirectTo }}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.2px;">Sign In</a>
                   </td>
                 </tr>
               </table>
               <p style="margin:0 0 16px;font-size:13px;color:#6b5c5c;line-height:1.6;">If the button doesn't work, copy and paste this link into your browser:</p>
-              <p style="margin:0;font-size:13px;color:#e11d34;word-break:break-all;line-height:1.6;">{{ .ConfirmationURL }}</p>
+              <p style="margin:0;font-size:13px;color:#e11d34;word-break:break-all;line-height:1.6;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next={{ .RedirectTo }}</p>
             </td>
           </tr>
           <!-- Footer -->

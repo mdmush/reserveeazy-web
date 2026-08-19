@@ -27,7 +27,15 @@ Dashboard: https://supabase.com/dashboard/project/terktsddtkazlyxgdzdz
 4. Optional: Authentication → SMTP Settings
    - Configure custom SMTP (Resend, SendGrid) for branded emails
 
-5. Deploy via GitHub → Vercel
+5. Authentication → Email Templates (member portal magic links)
+   - Paste each file from docs/email-templates/ into its template
+   - Magic Link MUST use the token_hash form (docs/email-templates/magic-link.html):
+       {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next={{ .RedirectTo }}
+     (PKCE-code links break when opened in a different browser)
+   - Redirect URLs must include /portal and /join/** paths (the /** entries
+     in step 2 already cover this)
+
+6. Deploy via GitHub → Vercel
    - Push this repo to GitHub
    - Import at https://vercel.com/new
    - Add environment variables in Vercel project settings:
